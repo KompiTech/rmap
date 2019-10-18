@@ -8,6 +8,8 @@ import (
 	"github.com/qri-io/jsonschema"
 	jsonptr "github.com/xeipuuv/gojsonpointer"
 	"golang.org/x/crypto/blake2b"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"strings"
 )
 
@@ -67,6 +69,28 @@ func NewFromInterface(value interface{}) (Rmap, error) {
 	default:
 		return Rmap{}, fmt.Errorf("unable to create Rmap from interface{}, type is: %T", value)
 	}
+}
+
+func NewFromYAMLFile(path string) (Rmap, error) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return Rmap{}, errors.Wrapf(err, "ioutil.ReadFile() failed")
+	}
+
+	out := map[interface{}]interface{}{}
+	if err := yaml.Unmarshal(data, &out); err != nil {
+		return Rmap{}, errors.Wrapf(err, "yaml.Unmarshal() failed")
+	}
+
+	return NewFromMap(jsonify(out)), nil
+}
+
+func MustNewFromYAMLFile(path string) Rmap {
+	rm, err := NewFromYAMLFile(path)
+	if err != nil {
+		panic(err)
+	}
+	return rm
 }
 
 func MustNewFromInterface(value interface{}) Rmap {
@@ -590,4 +614,29 @@ func (r Rmap) KeysSlice() []interface{} {
 		output = append(output, key)
 	}
 	return output
+}
+
+// Jsonify converts map[interface{}]interface{} (YAML) to map[string]interface{} (JSON)
+func jsonify(m map[interface{}]interface{}) map[string]interface{} {
+	res := map[string]interface{}{}
+	for k, v := range m {
+		switch v2 := v.(type) {
+		case map[interface{}]interface{}:
+			res[fmt.Sprint(k)] = jsonify(v2)
+		case []interface{}:
+			array := make([]interface{}, len(v2))
+			for idx, v3 := range v2 {
+				if m, ok := v3.(map[interface{}]interface{}); !ok {
+					//default
+					array[idx] = v3
+				} else {
+					array[idx] = jsonify(m)
+				}
+			}
+			res[fmt.Sprint(k)] = array
+		default:
+			res[fmt.Sprint(k)] = v
+		}
+	}
+	return res
 }
