@@ -532,16 +532,34 @@ func (r Rmap) GetCasbinObject() (string, error) {
 }
 
 func (r Rmap) IsAsset() (bool, error) {
-	for _, serviceKey := range ServiceKeys {
-		exists, err := r.ExistsJPtr("/" + serviceKey)
+	if r.Exists(DocTypeKey) {
+		docType, err := r.GetDocType()
 		if err != nil {
-			return false, errors.Wrapf(err, "r.ExistsJPtr() failed")
+			return false, errors.Wrapf(err, "r.GetDocType() failed")
 		}
-		if !exists {
-			return false, nil
+
+		var keysToCheck []string
+		if docType != "identity" {
+			// anything else than identity uses standard service keys
+			keysToCheck = append(keysToCheck, ServiceKeys[:]...)
+		} else {
+			// identity is also asset, but doesnt have uuid, has fingerprint
+			keysToCheck = []string{"fingerprint", VersionKey, DocTypeKey}
 		}
+
+		for _, key := range keysToCheck {
+			exists, err := r.ExistsJPtr("/" + key)
+			if err != nil {
+				return false, errors.Wrapf(err, "r.ExistsJPtr() failed")
+			}
+			if !exists {
+				return false, nil
+			}
+		}
+		return true, nil
 	}
-	return true, nil
+	// no docType - cannot be an asset
+	return false, nil
 }
 
 // Inject puts keys from value into this Rmap in path
