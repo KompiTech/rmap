@@ -611,6 +611,10 @@ func (r *Rmap) ApplyMergePatch(patch Rmap) error {
 	return nil
 }
 
+func (r Rmap) CreateMergePatch(changed Rmap) ([]byte, error) {
+	return jsonpatch.CreateMergePatch(r.Bytes(), changed.Bytes())
+}
+
 func (r Rmap) GetTXSKey() (string, error) {
 	docType, err := r.GetDocType()
 	if err != nil {

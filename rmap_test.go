@@ -2,6 +2,7 @@ package rmap
 
 import (
 	"testing"
+	"bytes"
 )
 
 func TestGetJPtrRmap(t *testing.T) {
@@ -27,6 +28,23 @@ func TestExistsJPtr(t *testing.T) {
 	res, err := r.ExistsJPtr("/properties/roles/items/type")
 	if res != true {
 		t.Error("res is false")
+		return
+	}
+}
+
+func TestCreateMergePatch(t *testing.T) {
+	original := NewFromMap(map[string]interface{}{"existing": "value"})
+	changed := NewFromMap(map[string]interface{}{"new": "value"})
+	expectedPatch := []byte(`{"existing":null,"new":"value"}`)
+
+	patch, err := original.CreateMergePatch(changed)
+	if err != nil {
+		t.Error("original.CreateMergePatch()")
+		return
+	}
+
+	if bytes.Compare(patch, expectedPatch) != 0 {
+		t.Error("patch is wrong")
 		return
 	}
 }
