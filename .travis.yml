@@ -1,0 +1,17 @@
+notifications:
+  slack: kompitech:8LGMJMu3lGRjXX7lbp5hlwum
+language: go
+go:
+  - "1.11.x"
+  - "1.12.x"
+  - "1.13.x"
+cache:
+  directories:
+    - $HOME/.cache/go-build
+    - $HOME/gopath/pkg/mod
+env:
+  - GO111MODULE=on
+before_install:
+  - 'git config --global url."git@github.com:KompiTech/".insteadOf "https://github.com/KompiTech/"'
+script:
+  - go test

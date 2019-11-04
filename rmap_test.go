@@ -58,6 +58,6 @@ func TestNestedRmapMarshal(t *testing.T) {
 
 	err := json.Unmarshal(testRmap.Bytes(), &jsonMap)
 	assert.Nil(t, err)
-	
+
 	assert.Equal(t, refMap, jsonMap)
 }
