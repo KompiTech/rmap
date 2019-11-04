@@ -127,7 +127,7 @@ func (r Rmap) IsEmpty() bool {
 }
 
 func (r Rmap) Bytes() []byte {
-	byt, _ := json.Marshal(r.Mapa)
+	byt, _ := json.Marshal(r)
 	return byt
 }
 
@@ -636,6 +636,11 @@ func (r Rmap) KeysSlice() []interface{} {
 		output = append(output, key)
 	}
 	return output
+}
+
+// MarshalJSON implements Marshaller interface to produce correct JSON without Mapa encapsulation
+func (r Rmap) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.Mapa)
 }
 
 // Jsonify converts map[interface{}]interface{} (YAML) to map[string]interface{} (JSON)
