@@ -61,3 +61,22 @@ func TestNestedRmapMarshal(t *testing.T) {
 
 	assert.Equal(t, refMap, jsonMap)
 }
+
+func TestYAMLBytes(t *testing.T) {
+	refMap := map[string]interface{}{
+		"nested": map[string]interface{}{
+			"value": "foobar",
+		},
+	}
+
+	refYAML := []byte(`nested:
+  value: foobar
+`)
+
+	testRmap := NewFromMap(refMap)
+
+	yamlBytes, err := testRmap.YAMLBytes()
+	assert.Nil(t, err)
+
+	assert.Equal(t, refYAML, yamlBytes)
+}
