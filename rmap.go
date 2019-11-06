@@ -58,6 +58,10 @@ func NewFromMap(mapa map[string]interface{}) Rmap {
 	return Rmap{mapa}
 }
 
+func NewFromYAMLMap(mapa map[interface{}]interface{}) Rmap {
+	return NewFromMap(jsonify(mapa))
+}
+
 func NewFromInterface(value interface{}) (Rmap, error) {
 	switch value.(type) {
 	case Rmap:
