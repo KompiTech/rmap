@@ -71,12 +71,7 @@ func NewFromInterface(value interface{}) (Rmap, error) {
 	}
 }
 
-func NewFromYAMLFile(path string) (Rmap, error) {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return Rmap{}, errors.Wrapf(err, "ioutil.ReadFile() failed")
-	}
-
+func NewFromYAMLBytes(data []byte) (Rmap, error) {
 	out := map[interface{}]interface{}{}
 	if err := yaml.Unmarshal(data, &out); err != nil {
 		return Rmap{}, errors.Wrapf(err, "yaml.Unmarshal() failed")
@@ -85,11 +80,29 @@ func NewFromYAMLFile(path string) (Rmap, error) {
 	return NewFromMap(jsonify(out)), nil
 }
 
+func NewFromYAMLFile(path string) (Rmap, error) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return Rmap{}, errors.Wrapf(err, "ioutil.ReadFile() failed")
+	}
+
+	return NewFromYAMLBytes(data)
+}
+
 func MustNewFromYAMLFile(path string) Rmap {
 	rm, err := NewFromYAMLFile(path)
 	if err != nil {
 		panic(err)
 	}
+	return rm
+}
+
+func MustNewFromYAMLBytes(data []byte) Rmap {
+	rm, err := NewFromYAMLBytes(data)
+	if err != nil {
+		panic(err)
+	}
+
 	return rm
 }
 
@@ -641,6 +654,19 @@ func (r Rmap) KeysSlice() []interface{} {
 // MarshalJSON implements Marshaller interface to produce correct JSON without Mapa encapsulation
 func (r Rmap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r.Mapa)
+}
+
+func (r Rmap) YAMLBytes() ([]byte, error) {
+	return yaml.Marshal(r.Mapa)
+}
+
+func (r Rmap) MustYAMLBytes() []byte {
+	byt, err := r.YAMLBytes()
+	if err != nil {
+		panic(err)
+	}
+
+	return byt
 }
 
 // Jsonify converts map[interface{}]interface{} (YAML) to map[string]interface{} (JSON)
