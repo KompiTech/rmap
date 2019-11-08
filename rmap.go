@@ -655,6 +655,15 @@ func (r Rmap) KeysSlice() []interface{} {
 	return output
 }
 
+// KeysSliceString returns r.Mapa keys as slice
+func (r Rmap) KeysSliceString() []string {
+	output := make([]string, 0, len(r.Mapa))
+	for key, _ := range r.Mapa {
+		output = append(output, key)
+	}
+	return output
+}
+
 // MarshalJSON implements Marshaller interface to produce correct JSON without Mapa encapsulation
 func (r Rmap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r.Mapa)
