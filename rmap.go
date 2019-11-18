@@ -11,6 +11,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"strings"
+	"time"
 )
 
 // Rmap is map[string]interface{} with additional functionality
@@ -467,6 +468,29 @@ func (r Rmap) MustGetJPtrIterable(jptr string) []interface{} {
 	if err != nil {
 		panic(err)
 	}
+	return val
+}
+
+func (r Rmap) GetJPtrTime(jptr string) (time.Time, error) {
+	val, err := r.GetJPtrString(jptr)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	parsed, err := time.Parse(time.RFC3339, val)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return parsed, nil
+}
+
+func (r Rmap) MustGetJPtrTime(jptr string) time.Time {
+	val, err := r.GetJPtrTime(jptr)
+	if err != nil {
+		panic(err)
+	}
+
 	return val
 }
 
