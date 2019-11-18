@@ -3,7 +3,6 @@ package rmap
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -90,10 +89,19 @@ func TestGetJPtrTime(t *testing.T) {
 	rm := NewEmpty()
 	rm.Mapa["time"] = now.Format(time.RFC3339)
 
-	fmt.Printf("%s", rm.Mapa["time"])
-
 	parsed, err := rm.GetJPtrTime("/time")
 	assert.Nil(t, err)
 
 	assert.Equal(t, now, parsed)
+}
+
+func TestGetJPtrFloat64(t *testing.T) {
+	value := 1.337
+	rm := NewEmpty()
+	rm.Mapa["float"] = value
+
+	parsed, err := rm.GetJPtrFloat64("/float")
+	assert.Nil(t, err)
+
+	assert.Equal(t, value, parsed)
 }
