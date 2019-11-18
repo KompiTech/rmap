@@ -3,6 +3,7 @@ package rmap
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -83,13 +84,16 @@ func TestYAMLBytes(t *testing.T) {
 }
 
 func TestGetJPtrTime(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	now = now.Truncate(time.Second) // RFC3339 has second precision
+
 	rm := NewEmpty()
 	rm.Mapa["time"] = now.Format(time.RFC3339)
 
+	fmt.Printf("%s", rm.Mapa["time"])
+
 	parsed, err := rm.GetJPtrTime("/time")
 	assert.Nil(t, err)
-	
-	assert.Equal(t, parsed, now)
+
+	assert.Equal(t, now, parsed)
 }
