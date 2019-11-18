@@ -494,6 +494,29 @@ func (r Rmap) MustGetJPtrTime(jptr string) time.Time {
 	return val
 }
 
+func (r Rmap) GetJPtrFloat64(jptr string) (float64, error) {
+	iface, err := r.GetJPtr(jptr)
+	if err != nil {
+		return -1.0, errors.Wrapf(err, "r.GetJPtr() failed")
+	}
+
+	switch iface.(type) {
+	case float64:
+		return iface.(float64), nil
+	default:
+		return -1.0, fmt.Errorf("JSONPointer path: %s is not an FLOAT64 in object: %s, but: %T", jptr, r.String(), iface)
+	}
+}
+
+func (r Rmap) MustGetJPtrFloat64(jptr string) float64 {
+	val, err := r.GetJPtrFloat64(jptr)
+	if err != nil {
+		panic(err)
+	}
+
+	return val
+}
+
 func (r Rmap) Hash() [32]byte {
 	return blake2b.Sum256(r.Bytes())
 }
