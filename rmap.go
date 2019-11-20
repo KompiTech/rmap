@@ -340,6 +340,15 @@ func (r Rmap) GetJPtrBool(path string) (bool, error) {
 	return valB, nil
 }
 
+func (r Rmap) MustGetJPtrBool(jptr string) bool {
+	val, err := r.GetJPtrBool(jptr)
+	if err != nil {
+		panic(err)
+	}
+
+	return val
+}
+
 func (r Rmap) GetJPtrInt(path string) (int, error) {
 	val, err := r.GetJPtr(path)
 	if err != nil {
