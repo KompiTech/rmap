@@ -19,17 +19,14 @@ type Rmap struct {
 	Mapa map[string]interface{}
 }
 
-// which key in asset stores version
-const VersionKey = "xxx_version"
-
-// which key in asset stores primary key
-const IdKey = "uuid"
-
-// which key in asset stores document type
-const DocTypeKey = "docType"
-
-// which key stores fingerprint for identity assets
-const FingerprintKey = "fingerprint"
+const (
+	VersionKey        = "xxx_version" // which key in asset stores version
+	IdKey             = "uuid" // which key in asset stores primary key
+	DocTypeKey        = "docType" // which key in asset stores document type
+	FingerprintKey    = "fingerprint" // which key stores fingerprint for identity assets
+	errInvalidKeyType = "key: %s is not of type: %s in object: %s, but: %T"
+	errInvalidJPtrType = "JSONPointer: %s is not of type: %s in object: %s, but: %T"
+)
 
 // which keys are constituting an asset
 var ServiceKeys = [...]string{VersionKey, IdKey, DocTypeKey}
@@ -289,6 +286,7 @@ func (r Rmap) ExistsJPtr(path string) (bool, error) {
 	}
 
 	if _, _, err := ptr.Get(r.Mapa); err != nil {
+		// TODO this is not ideal, do not check error message, but no other API is available
 		if strings.HasPrefix(err.Error(), "Object has no key") {
 			return false, nil
 		}
@@ -424,20 +422,18 @@ func (r Rmap) ContainsJPtrKV(jptr, jptrKey string, value interface{}) (bool, err
 	return false, nil
 }
 
-
-
 func (r Rmap) GetJPtrRmap(path string) (Rmap, error) {
-	val, err := r.GetJPtr(path)
+	valI, err := r.GetJPtr(path)
 	if err != nil {
 		return Rmap{}, errors.Wrapf(err, "r.GetJPtr() failed")
 	}
-	switch val.(type) {
+	switch valI.(type) {
 	case map[string]interface{}:
-		return NewFromMap(val.(map[string]interface{})), nil
+		return NewFromMap(valI.(map[string]interface{})), nil
 	case Rmap:
-		return val.(Rmap), nil
+		return valI.(Rmap), nil
 	default:
-		return Rmap{}, fmt.Errorf("JSONPointer path: %s is not an OBJECT in object: %s, but: %T", path, r.String(), val)
+		return Rmap{}, fmt.Errorf(errInvalidJPtrType, path, "OBJECT", r.String(), valI)
 	}
 }
 
@@ -450,23 +446,14 @@ func (r Rmap) MustGetJPtrRmap(jptr string) Rmap {
 }
 
 func (r Rmap) GetJPtrIterable(path string) ([]interface{}, error) {
-	val, err := r.GetJPtr(path)
+	valI, err := r.GetJPtr(path)
 	if err != nil {
 		return []interface{}{}, errors.Wrapf(err, "r.GetJPtr() failed")
 	}
-	valIterable, ok := val.([]interface{})
-	if !ok {
-		return []interface{}{}, fmt.Errorf("JSONPointer path: %s is not an ARRAY in object: %s, but: %T", path, r.String(), val)
-	}
-	return valIterable, nil
-}
-
-func (r Rmap) GetIterable(key string) ([]interface{}, error) {
-	valI := r.Mapa[key]
 
 	valIterable, ok := valI.([]interface{})
 	if !ok {
-		return []interface{}{}, fmt.Errorf("key: %s is not an ARRAY in object: %s, but: %T", key, r.String(), valI)
+		return []interface{}{}, fmt.Errorf(errInvalidJPtrType, path, "ARRAY", r.String(), valI)
 	}
 
 	return valIterable, nil
@@ -477,6 +464,7 @@ func (r Rmap) MustGetJPtrIterable(jptr string) []interface{} {
 	if err != nil {
 		panic(err)
 	}
+
 	return val
 }
 
@@ -504,16 +492,16 @@ func (r Rmap) MustGetJPtrTime(jptr string) time.Time {
 }
 
 func (r Rmap) GetJPtrFloat64(jptr string) (float64, error) {
-	iface, err := r.GetJPtr(jptr)
+	valI, err := r.GetJPtr(jptr)
 	if err != nil {
 		return -1.0, errors.Wrapf(err, "r.GetJPtr() failed")
 	}
 
-	switch iface.(type) {
+	switch valI.(type) {
 	case float64:
-		return iface.(float64), nil
+		return valI.(float64), nil
 	default:
-		return -1.0, fmt.Errorf("JSONPointer path: %s is not an FLOAT64 in object: %s, but: %T", jptr, r.String(), iface)
+		return -1.0, fmt.Errorf(errInvalidJPtrType, jptr, "FLOAT64", r.String(), valI)
 	}
 }
 
@@ -761,4 +749,165 @@ func jsonify(m map[interface{}]interface{}) map[string]interface{} {
 		}
 	}
 	return res
+}
+
+func (r Rmap) get(key string) (interface{}, error) {
+	if val, exists := r.Mapa[key]; exists {
+		return val, nil
+	}
+	return nil, fmt.Errorf("key: %s does not exist in object: %s", key, r.String())
+}
+
+func (r Rmap) GetBool(key string) (bool, error) {
+	valI, err := r.get(key)
+	if err != nil {
+		return false, errors.Wrap(err, "r.get() failed")
+	}
+
+	valB, ok := valI.(bool)
+	if !ok {
+		return false, fmt.Errorf(errInvalidKeyType, key, "BOOLEAN", r.String(), valI)
+	}
+	return valB, nil
+}
+
+func (r Rmap) MustGetBool(key string) bool {
+	val, err := r.GetBool(key)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+func (r Rmap) GetFloat64(key string) (float64, error) {
+	valI, err := r.get(key)
+	if err != nil {
+		return -1.0, errors.Wrap(err, "r.get() failed")
+	}
+
+	valF, ok := valI.(float64)
+	if !ok {
+		return -1.0, fmt.Errorf(errInvalidKeyType, key, "FLOAT64", r.String(), valI)
+	}
+	return valF, nil
+}
+
+func (r Rmap) MustGetFloat64(key string) float64 {
+	val, err := r.GetFloat64(key)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+func (r Rmap) GetInt(key string) (int, error) {
+	valI, err := r.get(key)
+	if err != nil {
+		return -1, errors.Wrap(err, "r.get() failed")
+	}
+
+	switch valI.(type) {
+	case float64:
+		return int(valI.(float64)), nil
+	case int:
+		return valI.(int), nil
+	default:
+		return -1, fmt.Errorf(errInvalidKeyType, key, "INT or FLOAT64", r.String(), valI)
+	}
+}
+
+func (r Rmap) MustGetInt(key string) int {
+	val, err := r.GetInt(key)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+func (r Rmap) GetIterable(key string) ([]interface{}, error) {
+	valI, err := r.get(key)
+	if err != nil {
+		return nil, errors.Wrap(err, "r.get() failed")
+	}
+
+	valIter, ok := valI.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf(errInvalidKeyType, key, "ARRAY", r.String(), valI)
+	}
+	return valIter, nil
+}
+
+func (r Rmap) MustGetIterable(key string) []interface{} {
+	val, err := r.GetIterable(key)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+func (r Rmap) GetRmap(key string) (Rmap, error) {
+	valI, err := r.get(key)
+	if err != nil {
+		return Rmap{}, errors.Wrap(err, "r.get() failed")
+	}
+
+	switch valI.(type) {
+	case map[string]interface{}:
+		return NewFromMap(valI.(map[string]interface{})), nil
+	case Rmap:
+		return valI.(Rmap), nil
+	default:
+		return Rmap{}, fmt.Errorf(errInvalidKeyType, key, "OBJECT", r.String(), valI)
+	}
+}
+
+func (r Rmap) MustGetRmap(key string) Rmap {
+	val, err := r.GetRmap(key)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+func (r Rmap) GetString(key string) (string, error) {
+	valI, err := r.get(key)
+	if err != nil {
+		return "", errors.Wrap(err, "r.get() failed")
+	}
+
+	valS, ok := valI.(string)
+	if !ok {
+		return "", fmt.Errorf(errInvalidKeyType, key, "STRING", r.String(), valI)
+	}
+	return valS, nil
+}
+
+func (r Rmap) MustGetString(key string) string {
+	val, err := r.GetString(key)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+func (r Rmap) GetTime(key string) (time.Time, error) {
+	valS, err := r.GetString(key)
+	if err != nil {
+		return time.Time{}, errors.Wrap(err, "r.GetString() failed")
+	}
+
+	parsed, err := time.Parse(time.RFC3339, valS)
+	if err != nil {
+		return time.Time{}, errors.Wrap(err, "time.Parse() failed")
+	}
+
+	return parsed, nil
+}
+
+func (r Rmap) MustGetTime(key string) time.Time {
+	val, err := r.GetTime(key)
+	if err != nil {
+		panic(err)
+	}
+	return val
 }
