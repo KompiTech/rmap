@@ -6,6 +6,7 @@ import (
 	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/pkg/errors"
 	"github.com/qri-io/jsonschema"
+	"github.com/shopspring/decimal"
 	jsonptr "github.com/xeipuuv/gojsonpointer"
 	"golang.org/x/crypto/blake2b"
 	"gopkg.in/yaml.v2"
@@ -909,5 +910,51 @@ func (r Rmap) MustGetTime(key string) time.Time {
 	if err != nil {
 		panic(err)
 	}
+	return val
+}
+
+func (r Rmap) GetDecimal(key string) (decimal.Decimal, error) {
+	valS, err := r.GetString(key)
+	if err != nil {
+		return decimal.Zero, errors.Wrap(err, "r.GetString() failed")
+	}
+
+	val, err := decimal.NewFromString(valS)
+	if err != nil {
+		return decimal.Zero, errors.Wrap(err, "decimal.NewFromString() failed")
+	}
+
+	return val, nil
+}
+
+func (r Rmap) MustGetDecimal(key string) decimal.Decimal {
+	val, err := r.GetDecimal(key)
+	if err != nil {
+		panic(err)
+	}
+
+	return val
+}
+
+func (r Rmap) GetJPtrDecimal(jptr string) (decimal.Decimal, error) {
+	valS, err := r.GetJPtrString(jptr)
+	if err != nil {
+		return decimal.Zero, errors.Wrap(err, "r.GetJPtrString() failed")
+	}
+
+	val, err := decimal.NewFromString(valS)
+	if err != nil {
+		return decimal.Zero, errors.Wrap(err, "decimal.NewFromString() failed")
+	}
+
+	return val, nil
+}
+
+func (r Rmap) MustGetJPtrDecimal(jptr string) decimal.Decimal {
+	val, err := r.GetJPtrDecimal(jptr)
+	if err != nil {
+		panic(err)
+	}
+
 	return val
 }
