@@ -279,6 +279,15 @@ func (r Rmap) Exists(key string) bool {
 	return exists
 }
 
+func (r Rmap) ExistsMany(keys []string) bool {
+	for _, key := range keys {
+		if exists := r.Exists(key); !exists {
+			return false
+		}
+	}
+	return true
+}
+
 // ExistsJPtr checks if some key (even nested), exists
 func (r Rmap) ExistsJPtr(path string) (bool, error) {
 	ptr, err := jsonptr.NewJsonPointer(path)
