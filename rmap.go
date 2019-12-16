@@ -180,11 +180,12 @@ func (r Rmap) ValidateSchemaBytes(schema []byte) error {
 
 	// if any errors are present, concat them into error
 	if errs, _ := rSchema.ValidateBytes(r.Bytes()); len(errs) > 0 {
-		allErrors := strings.Builder{}
+		errorStrings := make([]string, 0, len(errs))
+
 		for _, err := range errs {
-			allErrors.WriteString(err.Error())
+			errorStrings = append(errorStrings, fmt.Sprintf("InvalidValue: %+v, PropertyPath: %s, RulePath: %s, Message: %s", err.InvalidValue, err.PropertyPath, err.RulePath, err.Message))
 		}
-		return errors.New(allErrors.String())
+		return errors.New(strings.Join(errorStrings, "\n"))
 	}
 
 	return nil

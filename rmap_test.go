@@ -3,9 +3,10 @@ package rmap
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetJPtrRmap(t *testing.T) {
@@ -104,4 +105,40 @@ func TestGetJPtrFloat64(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, value, parsed)
+}
+
+func TestVerboseErrors(t *testing.T) {
+	schema := []byte(`{
+      "title": "Person",
+      "type": "object",
+      "properties": {
+          "firstName": {
+              "type": "string"
+          },
+          "lastName": {
+              "type": "string"
+          }
+      },
+      "required": ["firstName", "lastName"],
+      "additionalProperties": false
+    }`)
+
+	data := []byte(`{}`)
+	rm, err := NewFromBytes(data)
+	assert.Nil(t, err)
+
+	err = rm.ValidateSchemaBytes(schema)
+	expectedErr := "InvalidValue: map[], PropertyPath: /, RulePath: , Message: \"firstName\" value is required" + "\n" +
+	               "InvalidValue: map[], PropertyPath: /, RulePath: , Message: \"lastName\" value is required"
+	assert.Equal(t, expectedErr, err.Error())
+
+	data = []byte(`{"extraData": "bar"}`)
+	rm, err = NewFromBytes(data)
+	assert.Nil(t, err)
+
+	err = rm.ValidateSchemaBytes(schema)
+	expectedErr = `InvalidValue: map[extraData:bar], PropertyPath: /, RulePath: , Message: "firstName" value is required` + "\n" +
+	`InvalidValue: map[extraData:bar], PropertyPath: /, RulePath: , Message: "lastName" value is required` + "\n" +
+	`InvalidValue: bar, PropertyPath: /extraData, RulePath: , Message: cannot match schema`
+	assert.Equal(t, expectedErr, err.Error())
 }
