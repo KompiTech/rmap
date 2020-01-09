@@ -74,6 +74,14 @@ func NewFromInterface(value interface{}) (Rmap, error) {
 	}
 }
 
+func NewFromStringSlice(slice []string) Rmap {
+	output := NewEmpty()
+	for _, key := range slice {
+		output.Mapa[key] = struct{}{}
+	}
+	return output
+}
+
 func NewFromYAMLBytes(data []byte) (Rmap, error) {
 	out := map[interface{}]interface{}{}
 	if err := yaml.Unmarshal(data, &out); err != nil {
