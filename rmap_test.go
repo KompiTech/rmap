@@ -142,3 +142,14 @@ func TestVerboseErrors(t *testing.T) {
 	`InvalidValue: bar, PropertyPath: /extraData, RulePath: , Message: cannot match schema`
 	assert.Equal(t, expectedErr, err.Error())
 }
+
+func TestNewFromStringSlice(t *testing.T) {
+	keys := []string{"a", "b", "c"}
+	rmap := NewFromStringSlice(keys)
+
+	for _, key := range keys {
+		val, exists := rmap.Mapa[key]
+		assert.Equal(t, struct{}{}, val)
+		assert.True(t, exists)
+	}
+}
