@@ -867,10 +867,29 @@ func (r Rmap) GetIterable(key string) ([]interface{}, error) {
 		return nil, errors.Wrap(err, "r.get() failed")
 	}
 
-	valIter, ok := valI.([]interface{})
+	var valIter []interface{}
+	var ok bool
+
+	valIter, ok = valI.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf(errInvalidKeyType, key, "ARRAY", r.String(), valI)
+		tmpI, ok := valI.([]map[string]interface{})
+		if !ok {
+			tmpI2, ok := valI.([]Rmap)
+			if !ok {
+				return nil, fmt.Errorf(errInvalidKeyType, key, "ARRAY", r.String(), valI)
+			} else {
+				for _, xI := range tmpI2 {
+					valIter = append(valIter, xI)
+				}
+			}
+		} else {
+			for _, xI := range tmpI {
+				valIter = append(valIter, xI)
+			}
+		}
 	}
+
+
 	return valIter, nil
 }
 
