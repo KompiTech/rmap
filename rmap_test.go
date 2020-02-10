@@ -153,3 +153,45 @@ func TestNewFromStringSlice(t *testing.T) {
 		assert.True(t, exists)
 	}
 }
+
+func TestGetIterable(t *testing.T) {
+	rm := NewFromMap(map[string]interface{}{
+		"key": []interface{}{
+			map[string]interface{}{"a": "a"},
+			map[string]interface{}{"b": "b"},
+		},
+	})
+
+	iter, err := rm.GetIterable("key")
+	assert.Nil(t, err)
+
+	assert.Equal(t, 2, len(iter))
+}
+
+func TestGetIterable2(t *testing.T) {
+	rm := NewFromMap(map[string]interface{}{
+		"key": []map[string]interface{}{
+			{"a": "a"},
+			{"b": "b"},
+		},
+	})
+
+	iter, err := rm.GetIterable("key")
+	assert.Nil(t, err)
+
+	assert.Equal(t, 2, len(iter))
+}
+
+func TestGetIterable3(t *testing.T) {
+	rm := NewFromMap(map[string]interface{}{
+		"key": []Rmap{
+			NewFromMap(map[string]interface{}{"a": "a"}),
+			NewFromMap(map[string]interface{}{"b": "b"}),
+		},
+	})
+
+	iter, err := rm.GetIterable("key")
+	assert.Nil(t, err)
+
+	assert.Equal(t, 2, len(iter))
+}
