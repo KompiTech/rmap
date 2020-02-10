@@ -392,11 +392,29 @@ func (r Rmap) MustGetJPtrInt(path string) int {
 	return value
 }
 
+// ContainsJPtr gets some JPtr path (it must be iterable) and checks if needle is contained
 // jptr must point to something iterable, usually []string
 func (r Rmap) ContainsJPtr(jptr string, needle interface{}) (bool, error) {
 	haystack, err := r.GetJPtrIterable(jptr)
 	if err != nil {
 		return false, errors.Wrapf(err, "r.GetJPtrIterable() failed")
+	}
+
+	for _, elem := range haystack {
+		if elem == needle {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// Contains gets some key (it must be iterable) and checks if needle is contained
+// key must point to something iterable, usually []string
+func (r Rmap) Contains(key string, needle interface{}) (bool, error) {
+	haystack, err := r.GetIterable(key)
+	if err != nil {
+		return false, errors.Wrapf(err, "r.GetIterable() failed")
 	}
 
 	for _, elem := range haystack {
