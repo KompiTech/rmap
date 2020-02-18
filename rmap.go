@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/blake2b"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"sort"
 	"strings"
 	"time"
 )
@@ -21,16 +22,9 @@ type Rmap struct {
 }
 
 const (
-	VersionKey        = "xxx_version" // which key in asset stores version
-	IdKey             = "uuid" // which key in asset stores primary key
-	DocTypeKey        = "docType" // which key in asset stores document type
-	FingerprintKey    = "fingerprint" // which key stores fingerprint for identity assets
 	errInvalidKeyType = "key: %s is not of type: %s in object: %s, but: %T"
 	errInvalidJPtrType = "JSONPointer: %s is not of type: %s in object: %s, but: %T"
 )
-
-// which keys are constituting an asset
-var ServiceKeys = [...]string{VersionKey, IdKey, DocTypeKey}
 
 // ConvertSliceToMaps converts slice of []Rmap to []interface{} containing map[string]interface{}, so it can be marshalled
 func ConvertSliceToMaps(slice []Rmap) []interface{} {
@@ -193,6 +187,7 @@ func (r Rmap) ValidateSchemaBytes(schema []byte) error {
 		for _, err := range errs {
 			errorStrings = append(errorStrings, fmt.Sprintf("InvalidValue: %+v, PropertyPath: %s, RulePath: %s, Message: %s", err.InvalidValue, err.PropertyPath, err.RulePath, err.Message))
 		}
+		sort.Strings(errorStrings)
 		return errors.New(strings.Join(errorStrings, "\n"))
 	}
 
@@ -261,19 +256,6 @@ func (r Rmap) SetJPtr(path string, value interface{}) error {
 	}
 
 	return nil
-}
-
-func (r Rmap) HasServiceKey() bool {
-	_, hasDocType := r.Mapa[DocTypeKey]
-	_, hasVersion := r.Mapa[VersionKey]
-	_, hasID := r.Mapa[IdKey]
-	_, hasFingerprint := r.Mapa[FingerprintKey]
-
-	if hasDocType || hasVersion || hasID || hasFingerprint {
-		return true
-	}
-
-	return false
 }
 
 func (r Rmap) MustSetJPtr(jptr string, value interface{}) {
@@ -555,111 +537,6 @@ func (r Rmap) Hash() [32]byte {
 	return blake2b.Sum256(r.Bytes())
 }
 
-func (r Rmap) GetVersion() (int, error) {
-	return r.GetJPtrInt("/" + VersionKey)
-}
-
-func (r Rmap) MustGetVersion() int {
-	val, err := r.GetVersion()
-	if err != nil {
-		panic(err)
-	}
-	return val
-}
-
-func (r Rmap) SetVersion(version int) {
-	r.Mapa[VersionKey] = version
-}
-
-func (r Rmap) GetDocType() (string, error) {
-	val, err := r.GetJPtrString("/" + DocTypeKey)
-	if err != nil {
-		return "", errors.Wrapf(err, "r.GetJPtrString() failed")
-	}
-
-	return strings.ToLower(val), nil
-}
-
-func (r Rmap) GetIDKey() (string, error) {
-	docType, err := r.GetDocType()
-	if err != nil {
-		return "", errors.Wrapf(err, "GetDocType() failed")
-	}
-
-	if strings.ToLower(docType) == "identity" {
-		return "fingerprint", nil
-	}
-	return IdKey, nil
-}
-
-func (r Rmap) GetID() (string, error) {
-	idKey, err := r.GetIDKey()
-	if err != nil {
-		return "", errors.Wrapf(err, "r.GetIDKey() failed")
-	}
-
-	value, err := r.GetJPtrString("/" + idKey)
-	if err != nil {
-		return "", errors.Wrapf(err, "r.GetJPtrString() failed")
-	}
-
-	return strings.ToLower(value), nil
-}
-
-func (r Rmap) MustGetID() string {
-	val, err := r.GetID()
-	if err != nil {
-		panic(err)
-	}
-
-	return val
-}
-
-func (r Rmap) GetCasbinObject() (string, error) {
-	docType, err := r.GetDocType()
-	if err != nil {
-		return "", errors.Wrapf(err, "r.GetDocType() failed")
-	}
-
-	name, err := r.GetID()
-	if err != nil {
-		return "", errors.Wrapf(err, "r.GetID() failed")
-	}
-
-	return strings.ToLower(fmt.Sprintf("/%s/%s", docType, name)), nil
-}
-
-func (r Rmap) IsAsset() (bool, error) {
-	if r.Exists(DocTypeKey) {
-		docType, err := r.GetDocType()
-		if err != nil {
-			return false, errors.Wrapf(err, "r.GetDocType() failed")
-		}
-
-		var keysToCheck []string
-		if docType != "identity" {
-			// anything else than identity uses standard service keys
-			keysToCheck = append(keysToCheck, ServiceKeys[:]...)
-		} else {
-			// identity is also asset, but doesnt have uuid, has fingerprint
-			keysToCheck = []string{"fingerprint", VersionKey, DocTypeKey}
-		}
-
-		for _, key := range keysToCheck {
-			exists, err := r.ExistsJPtr("/" + key)
-			if err != nil {
-				return false, errors.Wrapf(err, "r.ExistsJPtr() failed")
-			}
-			if !exists {
-				return false, nil
-			}
-		}
-		return true, nil
-	}
-	// no docType - cannot be an asset
-	return false, nil
-}
-
 // Inject puts keys from value into this Rmap in path
 // Creates target path if it doesnt exist (but only one level)
 // Silently overwrites existing values
@@ -711,20 +588,6 @@ func (r *Rmap) ApplyMergePatch(patch Rmap) error {
 
 func (r Rmap) CreateMergePatch(changed Rmap) ([]byte, error) {
 	return jsonpatch.CreateMergePatch(r.Bytes(), changed.Bytes())
-}
-
-func (r Rmap) GetTXSKey() (string, error) {
-	docType, err := r.GetDocType()
-	if err != nil {
-		return "", errors.Wrapf(err, "r.GetDocType() failed")
-	}
-
-	id, err := r.GetID()
-	if err != nil {
-		return "", errors.Wrapf(err, "r.GetID() failed")
-	}
-
-	return strings.ToLower(fmt.Sprintf("%s:%s", docType, id)), nil
 }
 
 // KeysSlice returns r.Mapa keys as slice
