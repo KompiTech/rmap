@@ -535,107 +535,6 @@ func (r Rmap) Hash() [32]byte {
 	return blake2b.Sum256(r.Bytes())
 }
 
-//func (r Rmap) MustGetVersion() int {
-//	val, err := r.GetVersion()
-//	if err != nil {
-//		panic(err)
-//	}
-//	return val
-//}
-
-//func (r Rmap) SetVersion(version int) {
-//	r.Mapa[VersionKey] = version
-//}
-
-//func (r Rmap) GetDocType() (string, error) {
-//	val, err := r.GetJPtrString("/" + DocTypeKey)
-//	if err != nil {
-//		return "", errors.Wrapf(err, "r.GetJPtrString() failed")
-//	}
-//
-//	return strings.ToLower(val), nil
-//}
-
-//func (r Rmap) GetIDKey() (string, error) {
-//	docType, err := r.GetDocType()
-//	if err != nil {
-//		return "", errors.Wrapf(err, "GetDocType() failed")
-//	}
-//
-//	if strings.ToLower(docType) == "identity" {
-//		return "fingerprint", nil
-//	}
-//	return IdKey, nil
-//}
-
-//func (r Rmap) GetID() (string, error) {
-//	idKey, err := r.GetIDKey()
-//	if err != nil {
-//		return "", errors.Wrapf(err, "r.GetIDKey() failed")
-//	}
-//
-//	value, err := r.GetJPtrString("/" + idKey)
-//	if err != nil {
-//		return "", errors.Wrapf(err, "r.GetJPtrString() failed")
-//	}
-//
-//	return strings.ToLower(value), nil
-//}
-
-//func (r Rmap) MustGetID() string {
-//	val, err := r.GetID()
-//	if err != nil {
-//		panic(err)
-//	}
-//
-//	return val
-//}
-
-//func (r Rmap) GetCasbinObject() (string, error) {
-//	docType, err := r.GetDocType()
-//	if err != nil {
-//		return "", errors.Wrapf(err, "r.GetDocType() failed")
-//	}
-//
-//	name, err := r.GetID()
-//	if err != nil {
-//		return "", errors.Wrapf(err, "r.GetID() failed")
-//	}
-//
-//	return strings.ToLower(fmt.Sprintf("/%s/%s", docType, name)), nil
-//}
-
-//func (r Rmap) IsAsset() (bool, error) {
-//	if r.Exists(DocTypeKey) {
-//		docType, err := r.GetDocType()
-//		if err != nil {
-//			return false, errors.Wrapf(err, "r.GetDocType() failed")
-//		}
-//
-//		var keysToCheck []string
-//		if docType != "identity" {
-//			// anything else than identity uses standard service keys
-//			keysToCheck = append(keysToCheck, ServiceKeys[:]...)
-//		} else {
-//			// identity is also asset, but doesnt have uuid, has fingerprint
-//			keysToCheck = []string{"fingerprint", VersionKey, DocTypeKey}
-//		}
-//
-//		for _, key := range keysToCheck {
-//			exists, err := r.ExistsJPtr("/" + key)
-//			if err != nil {
-//				return false, errors.Wrapf(err, "r.ExistsJPtr() failed")
-//			}
-//			if !exists {
-//				return false, nil
-//			}
-//		}
-//		return true, nil
-//	}
-//	// no docType - cannot be an asset
-//	return false, nil
-//}
-
 // Inject puts keys from value into this Rmap in path
 // Creates target path if it doesnt exist (but only one level)
 // Silently overwrites existing values
@@ -688,20 +587,6 @@ func (r *Rmap) ApplyMergePatch(patch Rmap) error {
 func (r Rmap) CreateMergePatch(changed Rmap) ([]byte, error) {
 	return jsonpatch.CreateMergePatch(r.Bytes(), changed.Bytes())
 }
-
-//func (r Rmap) GetTXSKey() (string, error) {
-//	docType, err := r.GetDocType()
-//	if err != nil {
-//		return "", errors.Wrapf(err, "r.GetDocType() failed")
-//	}
-//
-//	id, err := r.GetID()
-//	if err != nil {
-//		return "", errors.Wrapf(err, "r.GetID() failed")
-//	}
-//
-//	return strings.ToLower(fmt.Sprintf("%s:%s", docType, id)), nil
-//}
 
 // KeysSlice returns r.Mapa keys as slice
 func (r Rmap) KeysSlice() []interface{} {
