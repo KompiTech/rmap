@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/blake2b"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"sort"
 	"strings"
 	"time"
 )
@@ -186,6 +187,7 @@ func (r Rmap) ValidateSchemaBytes(schema []byte) error {
 		for _, err := range errs {
 			errorStrings = append(errorStrings, fmt.Sprintf("InvalidValue: %+v, PropertyPath: %s, RulePath: %s, Message: %s", err.InvalidValue, err.PropertyPath, err.RulePath, err.Message))
 		}
+		sort.Strings(errorStrings)
 		return errors.New(strings.Join(errorStrings, "\n"))
 	}
 
