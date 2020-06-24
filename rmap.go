@@ -1,20 +1,23 @@
 package rmap
 
 import (
-	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"sort"
+	"strings"
+	"time"
+
 	jsonpatch "github.com/evanphx/json-patch"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
 	"github.com/qri-io/jsonschema"
 	"github.com/shopspring/decimal"
 	jsonptr "github.com/xeipuuv/gojsonpointer"
 	"golang.org/x/crypto/blake2b"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"sort"
-	"strings"
-	"time"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // Rmap is map[string]interface{} with additional functionality
 type Rmap struct {
@@ -22,7 +25,7 @@ type Rmap struct {
 }
 
 const (
-	errInvalidKeyType = "key: %s is not of type: %s in object: %s, but: %T"
+	errInvalidKeyType  = "key: %s is not of type: %s in object: %s, but: %T"
 	errInvalidJPtrType = "JSONPointer: %s is not of type: %s in object: %s, but: %T"
 )
 
@@ -548,12 +551,12 @@ func (r Rmap) Inject(path string, value Rmap) error {
 
 	if !targetExists {
 		// target key doesn't exist, initialize with empty Rmap
-		if err := r.SetJPtr(path, NewEmpty()) ; err != nil {
+		if err := r.SetJPtr(path, NewEmpty()); err != nil {
 			return errors.Wrapf(err, "r.SetJPtr() failed")
 		}
 	}
 
-	for k,v := range value.Mapa {
+	for k, v := range value.Mapa {
 		keyPath := path + "/" + k
 		if err := r.SetJPtr(keyPath, v); err != nil {
 			return errors.Wrapf(err, "r.SetJPtr() failed")
@@ -593,7 +596,7 @@ func (r Rmap) CreateMergePatch(changed Rmap) ([]byte, error) {
 // KeysSlice returns r.Mapa keys as slice
 func (r Rmap) KeysSlice() []interface{} {
 	output := make([]interface{}, 0, len(r.Mapa))
-	for key, _ := range r.Mapa {
+	for key := range r.Mapa {
 		output = append(output, key)
 	}
 	return output
@@ -602,7 +605,7 @@ func (r Rmap) KeysSlice() []interface{} {
 // KeysSliceString returns r.Mapa keys as slice
 func (r Rmap) KeysSliceString() []string {
 	output := make([]string, 0, len(r.Mapa))
-	for key, _ := range r.Mapa {
+	for key := range r.Mapa {
 		output = append(output, key)
 	}
 	return output
@@ -752,7 +755,6 @@ func (r Rmap) GetIterable(key string) ([]interface{}, error) {
 		}
 	}
 
-
 	return valIter, nil
 }
 
@@ -815,7 +817,7 @@ func (r Rmap) GetTime(key string) (time.Time, error) {
 		return time.Time{}, errors.Wrap(err, "r.GetString() failed")
 	}
 
-	parsed, err := time.Parse(time.RFC3339, valS)
+	parsed, err := time.ParseInLocation(time.RFC3339, valS, time.UTC)
 	if err != nil {
 		return time.Time{}, errors.Wrap(err, "time.Parse() failed")
 	}
@@ -875,4 +877,13 @@ func (r Rmap) MustGetJPtrDecimal(jptr string) decimal.Decimal {
 	}
 
 	return val
+}
+
+func (r Rmap) IsValidJSONSchema() bool {
+	rSchema := &jsonschema.RootSchema{}
+	if err := json.Unmarshal(r.Bytes(), rSchema); err != nil {
+		return false
+	}
+
+	return true
 }

@@ -3,8 +3,8 @@ module github.com/KompiTech/rmap
 go 1.12
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.5.0+incompatible
+	github.com/json-iterator/go v1.1.10
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/qri-io/jsonschema v0.1.1

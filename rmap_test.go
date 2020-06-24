@@ -2,7 +2,6 @@ package rmap
 
 import (
 	"bytes"
-	"encoding/json"
 	"testing"
 	"time"
 
@@ -129,7 +128,8 @@ func TestVerboseErrors(t *testing.T) {
 
 	err = rm.ValidateSchemaBytes(schema)
 	expectedErr := "InvalidValue: map[], PropertyPath: /, RulePath: , Message: \"firstName\" value is required" + "\n" +
-	               "InvalidValue: map[], PropertyPath: /, RulePath: , Message: \"lastName\" value is required"
+		"InvalidValue: map[], PropertyPath: /, RulePath: , Message: \"lastName\" value is required"
+	assert.NotNil(t, err)
 	assert.Equal(t, expectedErr, err.Error())
 
 	data = []byte(`{"extraData": "bar"}`)
@@ -137,9 +137,10 @@ func TestVerboseErrors(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = rm.ValidateSchemaBytes(schema)
-	expectedErr = `InvalidValue: bar, PropertyPath: /extraData, RulePath: , Message: cannot match schema`+ "\n" + `InvalidValue: map[extraData:bar], PropertyPath: /, RulePath: , Message: "firstName" value is required` + "\n" +
-	`InvalidValue: map[extraData:bar], PropertyPath: /, RulePath: , Message: "lastName" value is required`
+	expectedErr = `InvalidValue: bar, PropertyPath: /extraData, RulePath: , Message: cannot match schema` + "\n" + `InvalidValue: map[extraData:bar], PropertyPath: /, RulePath: , Message: "firstName" value is required` + "\n" +
+		`InvalidValue: map[extraData:bar], PropertyPath: /, RulePath: , Message: "lastName" value is required`
 
+	assert.NotNil(t, err)
 	assert.Equal(t, expectedErr, err.Error())
 }
 
@@ -194,4 +195,115 @@ func TestGetIterable3(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, 2, len(iter))
+}
+
+func TestRmap_IsValidJSONSchema(t *testing.T) {
+	rm, err := NewFromYAMLBytes([]byte(`{"additionalProperties":false,"type":"object"}`))
+	assert.Nil(t, err)
+	assert.True(t, rm.IsValidJSONSchema())
+
+	rm2, err2 := NewFromYAMLBytes([]byte(`{"hello":false,"world":"object"}`))
+	assert.Nil(t, err2)
+	assert.False(t, rm2.IsValidJSONSchema())
+}
+
+func TestConvertSliceToMaps(t *testing.T) {
+	map0 := map[string]interface{}{
+		"hello1": "world1",
+	}
+
+	map1 := map[string]interface{}{
+		"hello2": "world2",
+	}
+
+	rmaps := []Rmap{
+		NewFromMap(map0),
+		NewFromMap(map1),
+	}
+
+	maps := ConvertSliceToMaps(rmaps)
+
+	assert.Len(t, maps, 2)
+	assert.Equal(t, maps[0], map0)
+	assert.Equal(t, maps[1], map1)
+}
+
+func TestNewFromYAMLMap(t *testing.T) {
+	ymap := map[interface{}]interface{}{
+		"hello": "world",
+	}
+
+	rm := NewFromYAMLMap(ymap)
+
+	assert.Equal(t, rm.Mapa, map[string]interface{}{
+		"hello": "world",
+	})
+}
+
+func TestNewFromYAMLFile(t *testing.T) {
+	rm, err := NewFromYAMLFile("testdata/test.yaml")
+	assert.Nil(t, err)
+	assert.Equal(t, rm.Mapa, map[string]interface{}{
+		"hello": "world",
+	})
+}
+
+func TestMustNewFromYAMLFile(t *testing.T) {
+	rm := MustNewFromYAMLFile("testdata/test.yaml")
+	assert.Equal(t, rm.Mapa, map[string]interface{}{
+		"hello": "world",
+	})
+}
+
+func TestMustNewFromYAMLBytes(t *testing.T) {
+	byts := []byte(`hello: world`)
+	rm, err := NewFromYAMLBytes(byts)
+	assert.Nil(t, err)
+	assert.Equal(t, rm.Mapa, map[string]interface{}{
+		"hello": "world",
+	})
+
+	rm = MustNewFromYAMLBytes(byts)
+	assert.Equal(t, rm.Mapa, map[string]interface{}{
+		"hello": "world",
+	})
+}
+
+func TestNewFromInterfaceMap(t *testing.T) {
+	var iface interface{}
+	mapa := map[string]interface{}{"hello": "world"}
+
+	iface = mapa
+
+	rm, err := NewFromInterface(iface)
+	assert.Nil(t, err)
+	assert.Equal(t, rm.Mapa, mapa)
+
+	rm = MustNewFromInterface(iface)
+	assert.Equal(t, rm.Mapa, mapa)
+}
+
+func TestNewFromInterfaceBytes(t *testing.T) {
+	var iface interface{}
+	byts := []byte(`{"hello": "world"}`)
+	mapa := map[string]interface{}{"hello": "world"}
+
+	iface = byts
+	rm, err := NewFromInterface(iface)
+	assert.Nil(t, err)
+	assert.Equal(t, rm.Mapa, mapa)
+
+	rm = MustNewFromInterface(iface)
+	assert.Equal(t, rm.Mapa, mapa)
+}
+
+func TestNewFromSlice(t *testing.T) {
+	slice := []interface{}{"hello", "world"}
+
+	rm, err := NewFromSlice(slice)
+	assert.Nil(t, err)
+
+	assert.Len(t, rm.Mapa, 2)
+	assert.True(t, rm.Exists("hello"))
+	assert.True(t, rm.Exists("world"))
 }
