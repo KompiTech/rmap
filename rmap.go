@@ -1,7 +1,6 @@
 package rmap
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"sort"
@@ -9,6 +8,7 @@ import (
 	"time"
 
 	jsonpatch "github.com/evanphx/json-patch"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
 	"github.com/qri-io/jsonschema"
 	"github.com/shopspring/decimal"
@@ -16,6 +16,8 @@ import (
 	"golang.org/x/crypto/blake2b"
 	"gopkg.in/yaml.v2"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // Rmap is map[string]interface{} with additional functionality
 type Rmap struct {

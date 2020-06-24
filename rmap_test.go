@@ -2,7 +2,6 @@ package rmap
 
 import (
 	"bytes"
-	"encoding/json"
 	"testing"
 	"time"
 
