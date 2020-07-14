@@ -1,17 +1,18 @@
 notifications:
-  slack: kompitech:8LGMJMu3lGRjXX7lbp5hlwum
+  slack:
+    secure: aB0mW6MsTmzJYKw8PHR/2PlC/w0u4oSZmok/Bj1NaVV3eOEaLc+CaBhPiUckGXy0OLlPs38DWZMFco3/wUvv/8xtoNstC/rt+alX2sp+/Fyuzt8Er1KFwkbtYsdjAiBurqV7BFRCGCe16tZkINn9gafzb1wDnZftrXspbkA2C28oh3aigXYcDGCPl64UCRsm+xlg+pOyM9j1HoVCa3e2LkzbmVNK1f/QtKJJar9cBeQwwRWwld5f8ZNAEyYJxxXYxaXcCgZytjRU13cd0lJ6wSyo0VSMYAAaqJL/m6OGbZGC8Q6l8c85rByCQYag4H8kCMt4tp9hDNA0uSQnBXLCd//Elpbz41aP8FSYGimsnexJc32z0JWa8rZNcfrRYCfGgpor9KW1VWsDoach3SLNrKTFyrBnWptJF9OEG8kTtEV9dVq3ys9CxVQtURHX2Y7OvMikyn5YKOPXr4JDb2YWeBmKLkN62xkXVwZd6Jhj946poiXnGr/4TdAAJrgcXAq41VeFm8rzB7zoq8PvajTswwdxap1irG4khqyWXTDwtsrDFmJmoBPFQ0IMjfXE70P3xz1468t8fwFSr9gLNV/q6wzbSBVldWOZMhA7d+GQDD3DfQfMfTGcpY/Hy52wK1/6Modm2CzR01S5SXEgHjFveWUzK053zvtPfXwU3hzcHso=
 language: go
 go:
-  - "1.11.x"
-  - "1.12.x"
-  - "1.13.x"
+- 1.11.x
+- 1.12.x
+- 1.13.x
 cache:
   directories:
-    - $HOME/.cache/go-build
-    - $HOME/gopath/pkg/mod
+  - "$HOME/.cache/go-build"
+  - "$HOME/gopath/pkg/mod"
 env:
-  - GO111MODULE=on
+- GO111MODULE=on
 before_install:
-  - 'git config --global url."git@github.com:KompiTech/".insteadOf "https://github.com/KompiTech/"'
+- git config --global url."git@github.com:KompiTech/".insteadOf "https://github.com/KompiTech/"
 script:
-  - go test
+- go test
