@@ -2,6 +2,7 @@ package rmap
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"sort"
 	"strings"
@@ -52,6 +53,23 @@ func NewFromBytes(bytes []byte) (Rmap, error) {
 
 func NewFromMap(mapa map[string]interface{}) Rmap {
 	return Rmap{mapa}
+}
+
+func NewFromReader(rdr io.Reader) (Rmap, error) {
+	data, err := ioutil.ReadAll(rdr)
+	if err != nil {
+		return Rmap{}, err
+	}
+
+	return NewFromBytes(data)
+}
+
+func MustNewFromReader(rdr io.Reader) Rmap {
+	rm, err := NewFromReader(rdr)
+	if err != nil {
+		panic(err)
+	}
+	return rm
 }
 
 func NewFromYAMLMap(mapa map[interface{}]interface{}) Rmap {
