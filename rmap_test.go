@@ -307,3 +307,18 @@ func TestNewFromSlice(t *testing.T) {
 	assert.True(t, rm.Exists("hello"))
 	assert.True(t, rm.Exists("world"))
 }
+
+func TestGetIterableString(t *testing.T) {
+	key := "key"
+	refArr := []interface{}{"hello", "world"}
+	rm := NewFromMap(map[string]interface{}{
+		key: refArr,
+	})
+
+	outIter, err := rm.GetIterableString(key)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 2, len(outIter))
+	assert.Equal(t, refArr[0], outIter[0])
+	assert.Equal(t, refArr[1], outIter[1])
+}
