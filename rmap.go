@@ -28,6 +28,7 @@ type Rmap struct {
 const (
 	errInvalidKeyType  = "key: %s is not of type: %s in object: %s, but: %T"
 	errInvalidJPtrType = "JSONPointer: %s is not of type: %s in object: %s, but: %T"
+	errInvalidArrayMemberType = "key: %s containing array has invalid element type on index: %d, expected: %s, got: %T"
 )
 
 // ConvertSliceToMaps converts slice of []Rmap to []interface{} containing map[string]interface{}, so it can be marshalled
@@ -774,6 +775,35 @@ func (r Rmap) GetIterable(key string) ([]interface{}, error) {
 	}
 
 	return valIter, nil
+}
+
+func (r Rmap) GetIterableString(key string) ([]string, error) {
+	iter, err := r.GetIterable(key)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]string, len(iter))
+
+	for idx, iface := range iter {
+		str, ok := iface.(string)
+		if !ok {
+			return nil, fmt.Errorf(errInvalidArrayMemberType, key, idx, "string", iface)
+		}
+
+		out[idx] = str
+	}
+
+	return out, nil
+}
+
+func (r Rmap) MustGetIterableString(key string) []string {
+	out, err := r.GetIterableString(key)
+	if err != nil {
+		panic(err)
+	}
+
+	return out
 }
 
 func (r Rmap) MustGetIterable(key string) []interface{} {
