@@ -51,6 +51,14 @@ func NewFromBytes(bytes []byte) (Rmap, error) {
 	return NewFromMap(mapa), nil
 }
 
+func MustNewFromBytes(bytes []byte) Rmap {
+	rm, err := NewFromBytes(bytes)
+	if err != nil {
+		panic(err)
+	}
+	return rm
+}
+
 func NewFromMap(mapa map[string]interface{}) Rmap {
 	return Rmap{mapa}
 }
@@ -180,12 +188,14 @@ func (r Rmap) Copy() Rmap {
 	return rm
 }
 
-func (r Rmap) WrappedResultBytesRef() *[]byte {
-	wrapper := NewFromMap(map[string]interface{}{
+func (r Rmap) WrappedResult() Rmap {
+	return NewFromMap(map[string]interface{}{
 		"result": r.Mapa,
 	})
+}
 
-	byts := wrapper.Bytes()
+func (r Rmap) WrappedResultBytesRef() *[]byte {
+	byts := r.WrappedResult().Bytes()
 	return &byts
 }
 
