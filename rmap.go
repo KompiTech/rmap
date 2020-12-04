@@ -840,6 +840,15 @@ func (r Rmap) GetIterableJPtr(jptr string) ([]interface{}, error) {
 	return r.interfaceToIterable(valI, jptr)
 }
 
+func (r Rmap) MustGetIterableJPtr(jptr string) []interface{} {
+	val, err := r.GetIterableJPtr(jptr)
+	if err != nil {
+		panic(err)
+	}
+
+	return val
+}
+
 func (r Rmap) GetIterableRmap(key string) ([]Rmap, error) {
 	iter, err := r.GetIterable(key)
 	if err != nil {
