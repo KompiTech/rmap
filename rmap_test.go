@@ -308,17 +308,73 @@ func TestNewFromSlice(t *testing.T) {
 	assert.True(t, rm.Exists("world"))
 }
 
-func TestGetIterableString(t *testing.T) {
-	key := "key"
-	refArr := []interface{}{"hello", "world"}
-	rm := NewFromMap(map[string]interface{}{
-		key: refArr,
+func TestGetIterableJPtr(t *testing.T) {
+	obj := NewFromMap(map[string]interface{}{
+		"submap1": map[string]interface{}{
+			"submap2": map[string]interface{}{
+				"iter": []interface{}{"1", "2", "3"},
+			},
+		},
 	})
 
-	outIter, err := rm.GetIterableString(key)
+	iter, err := obj.GetIterableJPtr("/submap1/submap2/iter")
 	assert.Nil(t, err)
 
-	assert.Equal(t, 2, len(outIter))
-	assert.Equal(t, refArr[0], outIter[0])
-	assert.Equal(t, refArr[1], outIter[1])
+	assert.Equal(t, 3, len(iter))
+}
+
+func TestGetIterableRmap(t *testing.T) {
+	obj := NewFromMap(map[string]interface{}{
+		"submaps": []map[string]interface{}{
+			{"subvalue": "hello"},
+			{"subvalue": "world"},
+		},
+	})
+
+	submaps, err := obj.GetIterableRmap("submaps")
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(submaps))
+
+	assert.Equal(t, "hello", submaps[0].MustGetString("subvalue"))
+	assert.Equal(t, "world", submaps[1].MustGetString("subvalue"))
+}
+
+func TestGetIterableRmapJPtr(t *testing.T) {
+	obj := NewFromMap(map[string]interface{}{
+		"submaps": []map[string]interface{}{
+			{"subvalue": "hello"},
+			{"subvalue": "world"},
+		},
+	})
+
+	submaps, err := obj.GetIterableRmapJPtr("/submaps")
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(submaps))
+
+	assert.Equal(t, "hello", submaps[0].MustGetString("subvalue"))
+	assert.Equal(t, "world", submaps[1].MustGetString("subvalue"))
+}
+
+func TestGetIterableString(t *testing.T) {
+	obj := NewFromMap(map[string]interface{}{
+		"iter": []interface{}{"hello", "world"},
+	})
+
+	iterS, err := obj.GetIterableString("iter")
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(iterS))
+	assert.Equal(t, "hello", iterS[0])
+	assert.Equal(t, "world", iterS[1])
+}
+
+func TestGetIterableStringJPtr(t *testing.T) {
+	obj := NewFromMap(map[string]interface{}{
+		"iter": []interface{}{"hello", "world"},
+	})
+
+	iterS, err := obj.GetIterableStringJPtr("/iter")
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(iterS))
+	assert.Equal(t, "hello", iterS[0])
+	assert.Equal(t, "world", iterS[1])
 }
