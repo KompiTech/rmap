@@ -27,6 +27,7 @@ type Rmap struct {
 
 const (
 	errInvalidKeyType  = "key: %s is not of type: %s in object: %s, but: %T"
+	errInvalidArrayKeyType = "key: %s, array index: %d is not of type: %s in object: %s, but: %T"
 	errInvalidJPtrType = "JSONPointer: %s is not of type: %s in object: %s, but: %T"
 	errInvalidArrayMemberType = "key: %s containing array has invalid element type on index: %d, expected: %s, got: %T"
 )
@@ -762,6 +763,10 @@ func (r Rmap) GetIterable(key string) ([]interface{}, error) {
 		return nil, errors.Wrap(err, "r.get() failed")
 	}
 
+	return r.interfaceToIterable(valI, key)
+}
+
+func (r Rmap) interfaceToIterable(valI interface{}, key string) ([]interface{}, error) {
 	var valIter []interface{}
 	var ok bool
 
@@ -787,26 +792,6 @@ func (r Rmap) GetIterable(key string) ([]interface{}, error) {
 	return valIter, nil
 }
 
-func (r Rmap) GetIterableString(key string) ([]string, error) {
-	iter, err := r.GetIterable(key)
-	if err != nil {
-		return nil, err
-	}
-
-	out := make([]string, len(iter))
-
-	for idx, iface := range iter {
-		str, ok := iface.(string)
-		if !ok {
-			return nil, fmt.Errorf(errInvalidArrayMemberType, key, idx, "string", iface)
-		}
-
-		out[idx] = str
-	}
-
-	return out, nil
-}
-
 func (r Rmap) MustGetIterableString(key string) []string {
 	out, err := r.GetIterableString(key)
 	if err != nil {
@@ -814,6 +799,90 @@ func (r Rmap) MustGetIterableString(key string) []string {
 	}
 
 	return out
+}
+
+func (r Rmap) iterableToString(iter []interface{}, key string) ([]string, error) {
+	output := make([]string, len(iter))
+
+	for index, valI := range iter {
+		valS, ok := valI.(string)
+		if !ok {
+			return nil, fmt.Errorf(errInvalidArrayKeyType, key, index, "String", r.String(), valI)
+		}
+
+		output[index] = valS
+	}
+
+	return output, nil
+}
+
+func (r Rmap) iterableToRmap(iter []interface{}, key string) ([]Rmap, error) {
+	output := make([]Rmap, len(iter))
+
+	for index, subObj := range iter {
+		subMap, ok := subObj.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf(errInvalidArrayKeyType, key, index, "OBJECT", r.String(), subObj)
+		}
+
+		output[index] = NewFromMap(subMap)
+	}
+
+	return output, nil
+}
+
+func (r Rmap) GetIterableJPtr(jptr string) ([]interface{}, error) {
+	valI, err := r.GetJPtr(jptr)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.interfaceToIterable(valI, jptr)
+}
+
+func (r Rmap) GetIterableRmap(key string) ([]Rmap, error) {
+	iter, err := r.GetIterable(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.iterableToRmap(iter, key)
+}
+
+func (r Rmap) GetIterableString(key string) ([]string, error) {
+	iter, err := r.GetIterable(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.iterableToString(iter, key)
+}
+
+func (r Rmap) GetIterableStringJPtr(jptr string) ([]string, error) {
+	iter, err := r.GetIterableJPtr(jptr)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.iterableToString(iter, jptr)
+}
+
+func (r Rmap) GetIterableRmapJPtr(jptr string) ([]Rmap, error) {
+	iter, err := r.GetIterableJPtr(jptr)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.iterableToRmap(iter, jptr)
+}
+
+func (r Rmap) MustGetIterableRmap(key string) []Rmap {
+	val, err := r.GetIterableRmap(key)
+	if err != nil {
+		panic(err)
+	}
+
+	return val
 }
 
 func (r Rmap) MustGetIterable(key string) []interface{} {
