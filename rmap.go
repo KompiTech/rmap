@@ -876,6 +876,15 @@ func (r Rmap) GetIterableRmapJPtr(jptr string) ([]Rmap, error) {
 	return r.iterableToRmap(iter, jptr)
 }
 
+func (r Rmap) MustGetIterableRmapJPtr(jptr string) []Rmap {
+	val, err := r.GetIterableRmapJPtr(jptr)
+	if err != nil {
+		panic(err)
+	}
+
+	return val
+}
+
 func (r Rmap) MustGetIterableRmap(key string) []Rmap {
 	val, err := r.GetIterableRmap(key)
 	if err != nil {
