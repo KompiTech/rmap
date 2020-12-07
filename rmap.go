@@ -291,6 +291,43 @@ func (r Rmap) SetJPtr(path string, value interface{}) error {
 	return nil
 }
 
+// Set JPtrRecursive works like SetJPtr, but will create any missing parts of path
+func (r Rmap) SetJPtrRecursive(jptr string, value interface{}) error {
+	pathFields := strings.Split(jptr[1:], "/") // split jptr into all sub objects
+
+	for pathIndex, _  := range pathFields[:len(pathFields)-1] { // iterate until last elem (that will be set to supplied value, everything inbetween will be set to map if it doesnt exists)
+		subPathJPtr := "/" + strings.Join(pathFields[0:pathIndex+1], "/")
+
+		ptr, err := jsonptr.NewJsonPointer(subPathJPtr)
+		if err != nil {
+			return err
+		}
+
+		_, _, err = ptr.Get(r.Mapa)
+		if err != nil {
+			if !strings.HasPrefix(err.Error(), "Object has no key") {
+				// some other err
+				return err
+			}
+
+			// some part of jptr does not exists, create it
+			if _, err := ptr.Set(r.Mapa, map[string]interface{}{}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return r.SetJPtr(jptr, value)
+}
+
+func (r Rmap) MustSetJPtrRecursive(jptr string, value interface{}) error {
+	err := r.SetJPtrRecursive(jptr, value)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r Rmap) MustSetJPtr(jptr string, value interface{}) {
 	err := r.SetJPtr(jptr, value)
 	if err != nil {

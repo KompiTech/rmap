@@ -378,3 +378,13 @@ func TestGetIterableStringJPtr(t *testing.T) {
 	assert.Equal(t, "hello", iterS[0])
 	assert.Equal(t, "world", iterS[1])
 }
+
+func TestSetJPtrRecursiveCreate(t *testing.T) {
+	obj := NewEmpty()
+	jptr := "/very/deep/obj"
+	value := "world"
+
+	err := obj.SetJPtrRecursive(jptr, value)
+	assert.Nil(t, err)
+	assert.Equal(t, value, obj.MustGetJPtrString(jptr))
+}
