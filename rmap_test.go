@@ -378,3 +378,42 @@ func TestGetIterableStringJPtr(t *testing.T) {
 	assert.Equal(t, "hello", iterS[0])
 	assert.Equal(t, "world", iterS[1])
 }
+
+func TestSetJPtrRecursiveCreate(t *testing.T) {
+	obj := NewEmpty()
+	jptr := "/very/deep/obj"
+	value := "world"
+
+	err := obj.SetJPtrRecursive(jptr, value)
+	assert.Nil(t, err)
+	assert.Equal(t, value, obj.MustGetJPtrString(jptr))
+}
+
+func TestSetJPtrRecursiveNoOverwrite(t *testing.T) {
+	obj := NewFromMap(map[string]interface{}{
+		"very": map[string]interface{}{
+			"do_not_overwrite_this": "please",
+		},
+	})
+	jptr := "/very/deep/obj"
+	value := "world"
+
+	err := obj.SetJPtrRecursive(jptr, value)
+	assert.Nil(t, err)
+	assert.Equal(t, value, obj.MustGetJPtrString(jptr))
+	assert.Equal(t, "please", obj.MustGetJPtrString("/very/do_not_overwrite_this"))
+}
+
+func TestSetJPtrRecursiveBadSubjObj(t *testing.T) {
+	obj := NewFromMap(map[string]interface{}{
+		"very": map[string]interface{}{
+			"deep": "not_an_object",
+		},
+	})
+	jptr := "/very/deep/obj"
+	value := "world"
+
+	err := obj.SetJPtrRecursive(jptr, value)
+	assert.NotNil(t, err)
+	assert.Equal(t, "ptr.Set() failed: Invalid token reference 'obj'", err.Error())
+}
