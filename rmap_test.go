@@ -388,3 +388,18 @@ func TestSetJPtrRecursiveCreate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, value, obj.MustGetJPtrString(jptr))
 }
+
+func TestSetJPtrRecursiveNoOverwrite(t *testing.T) {
+	obj := NewFromMap(map[string]interface{}{
+		"very": map[string]interface{}{
+			"do_not_overwrite_this": "please",
+		},
+	})
+	jptr := "/very/deep/obj"
+	value := "world"
+
+	err := obj.SetJPtrRecursive(jptr, value)
+	assert.Nil(t, err)
+	assert.Equal(t, value, obj.MustGetJPtrString(jptr))
+	assert.Equal(t, "please", obj.MustGetJPtrString("/very/do_not_overwrite_this"))
+}
