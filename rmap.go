@@ -320,12 +320,11 @@ func (r Rmap) SetJPtrRecursive(jptr string, value interface{}) error {
 	return r.SetJPtr(jptr, value)
 }
 
-func (r Rmap) MustSetJPtrRecursive(jptr string, value interface{}) error {
+func (r Rmap) MustSetJPtrRecursive(jptr string, value interface{}) {
 	err := r.SetJPtrRecursive(jptr, value)
 	if err != nil {
-		return err
+		panic(err)
 	}
-	return nil
 }
 
 func (r Rmap) MustSetJPtr(jptr string, value interface{}) {
