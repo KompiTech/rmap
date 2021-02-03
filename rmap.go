@@ -53,6 +53,18 @@ func NewFromBytes(bytes []byte) (Rmap, error) {
 	return NewFromMap(mapa), nil
 }
 
+func NewFromString(input string) (Rmap, error) {
+	return NewFromBytes([]byte(input))
+}
+
+func MustNewFromString(input string) Rmap {
+	rm, err := NewFromBytes([]byte(input))
+	if err != nil {
+		panic(err)
+	}
+	return rm
+}
+
 func MustNewFromBytes(bytes []byte) Rmap {
 	rm, err := NewFromBytes(bytes)
 	if err != nil {
@@ -199,6 +211,10 @@ func (r Rmap) WrappedResult() Rmap {
 func (r Rmap) WrappedResultBytesRef() *[]byte {
 	byts := r.WrappedResult().Bytes()
 	return &byts
+}
+
+func (r Rmap) WrappedResultBytes() []byte {
+	return r.WrappedResult().Bytes()
 }
 
 func (r Rmap) String() string {
