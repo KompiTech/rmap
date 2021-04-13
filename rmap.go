@@ -1,6 +1,7 @@
 package rmap
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -224,17 +225,17 @@ func (r Rmap) String() string {
 // ValidateSchema checks if Rmap satisfies JSONSchema (bytes form) in argument
 func (r Rmap) ValidateSchemaBytes(schema []byte) error {
 	// load schema
-	rSchema := &jsonschema.RootSchema{}
+	rSchema := &jsonschema.Schema{}
 	if err := json.Unmarshal(schema, rSchema); err != nil {
 		return errors.Wrapf(err, "json.Unmarshal() failed")
 	}
 
 	// if any errors are present, concat them into error
-	if errs, _ := rSchema.ValidateBytes(r.Bytes()); len(errs) > 0 {
+	if errs, _ := rSchema.ValidateBytes(context.Background(), r.Bytes()); len(errs) > 0 {
 		errorStrings := make([]string, 0, len(errs))
 
 		for _, err := range errs {
-			errorStrings = append(errorStrings, fmt.Sprintf("InvalidValue: %+v, PropertyPath: %s, RulePath: %s, Message: %s", err.InvalidValue, err.PropertyPath, err.RulePath, err.Message))
+			errorStrings = append(errorStrings, fmt.Sprintf("InvalidValue: %+v, PropertyPath: %s, Message: %s", err.InvalidValue, err.PropertyPath, err.Message))
 		}
 		sort.Strings(errorStrings)
 		return errors.New(strings.Join(errorStrings, "\n"))
@@ -1077,10 +1078,11 @@ func (r Rmap) MustGetJPtrDecimal(jptr string) decimal.Decimal {
 }
 
 func (r Rmap) IsValidJSONSchema() bool {
-	rSchema := &jsonschema.RootSchema{}
+	rSchema := &jsonschema.Schema{}
 	if err := json.Unmarshal(r.Bytes(), rSchema); err != nil {
 		return false
 	}
 
-	return true
+	// every valid schema must have type keyword
+	return rSchema.HasKeyword("type")
 }

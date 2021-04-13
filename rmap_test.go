@@ -127,8 +127,8 @@ func TestVerboseErrors(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = rm.ValidateSchemaBytes(schema)
-	expectedErr := "InvalidValue: map[], PropertyPath: /, RulePath: , Message: \"firstName\" value is required" + "\n" +
-		"InvalidValue: map[], PropertyPath: /, RulePath: , Message: \"lastName\" value is required"
+	expectedErr := `InvalidValue: map[], PropertyPath: /, Message: "firstName" value is required` + "\n" +
+		`InvalidValue: map[], PropertyPath: /, Message: "lastName" value is required`
 	assert.NotNil(t, err)
 	assert.Equal(t, expectedErr, err.Error())
 
@@ -137,8 +137,9 @@ func TestVerboseErrors(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = rm.ValidateSchemaBytes(schema)
-	expectedErr = `InvalidValue: bar, PropertyPath: /extraData, RulePath: , Message: cannot match schema` + "\n" + `InvalidValue: map[extraData:bar], PropertyPath: /, RulePath: , Message: "firstName" value is required` + "\n" +
-		`InvalidValue: map[extraData:bar], PropertyPath: /, RulePath: , Message: "lastName" value is required`
+	expectedErr = `InvalidValue: map[extraData:bar], PropertyPath: /, Message: "firstName" value is required` + "\n" +
+		`InvalidValue: map[extraData:bar], PropertyPath: /, Message: "lastName" value is required` + "\n" +
+		`InvalidValue: map[extraData:bar], PropertyPath: /, Message: additional properties are not allowed`
 
 	assert.NotNil(t, err)
 	assert.Equal(t, expectedErr, err.Error())
