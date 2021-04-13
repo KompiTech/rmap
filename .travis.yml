@@ -1,18 +1,11 @@
-notifications:
-  slack:
-    secure: S0ECe7MoKYq9C3ZUiAXn49T4do39Wg0KiJ/GwZCpI8U6wPlS7jJUme2hNrlSNiZwgqrhR/2cbPAQevgiLTbPvyKWzlAXsaOEY7G7ksA+96NBxOBqnG+pfZ5SUuX4rGadm8Y/jVgASuRYoe7WOKK7fqlNNHKdbob0oWNZuvaXXyyTDfMW9dV/C3pOBcvVWPTjOqoUp6ntV6esEEHIGK7dpa1K7fy7X7jHKk8Uggn6Z13Wgr65XXdzAydKi8Fy4vj/pl26yzwSM9ZidN1OjkpAni0njkHdQmeAB3nRycrr3TeRHSr30AcMsIoJoMAjuuiAowlfxsjXOLLM0LGgXR0+kYtDT9vTH06FcBN1HzV/Jx/1Q1mkm5cYmUepl6ce7+ltTv4Exh/h4NgD/CJ6a7rw4z2SlTMhwAjt2SxACOLVdLZeOu8GhBp7gRzVE4VhlMgZaBMOxaKKXKbl9WnM/ErczCwwYwCMCbOcUc6OCnuFIEHhivD9UkjfAwzLlnuQD6y5m3ZNSC9vjP6gHb+rPtqC5mdLOe2pAkBRl8j2gnfW8xg2Tupus6CNVJYLo4k1OpbhvrIIwCV+/RkfIjiMgT82p245nwC9Am2b3RyoW8qecIMTvFChfBbDwalBv0xm/NG5q38cgolxcVlW4F2LvyLB27qFPptNjW1ITUL5qUFovew=
 language: go
 go:
-- 1.11.x
-- 1.12.x
-- 1.13.x
+- 1.14.x
+- 1.15.x
+- 1.16.x
 cache:
   directories:
   - "$HOME/.cache/go-build"
   - "$HOME/gopath/pkg/mod"
-env:
-- GO111MODULE=on
-before_install:
-- git config --global url."git@github.com:KompiTech/".insteadOf "https://github.com/KompiTech/"
 script:
 - go test
