@@ -222,7 +222,11 @@ func (r Rmap) String() string {
 	return string(r.Bytes())
 }
 
-// ValidateSchema checks if Rmap satisfies JSONSchema (bytes form) in argument
+func (r Rmap) ValidateSchema(schema Rmap) error {
+	return r.ValidateSchemaBytes(schema.Bytes())
+}
+
+// ValidateSchemaBytes checks if Rmap satisfies JSONSchema (bytes form) in argument
 func (r Rmap) ValidateSchemaBytes(schema []byte) error {
 	// load schema
 	rSchema := &jsonschema.Schema{}

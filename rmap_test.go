@@ -418,3 +418,36 @@ func TestSetJPtrRecursiveBadSubjObj(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, "ptr.Set() failed: Invalid token reference 'obj'", err.Error())
 }
+
+func TestReferences(t *testing.T) {
+	sch := NewFromMap(map[string]interface{}{
+		"$defs": map[string]interface{}{
+			"fingerprint": map[string]interface{}{
+				"type": "string",
+				"pattern": "^[0-9a-f]{4}$",
+			},
+		},
+		"type": "object",
+		"properties": map[string]interface{}{
+			"fp": map[string]interface{}{
+				"$ref": "#/$defs/fingerprint",
+			},
+		},
+		"additionalProperties": false,
+		"required": []interface{}{"fp"},
+	})
+
+	obj := NewFromMap(map[string]interface{}{
+		"fp": "1234",
+	})
+
+	err := obj.ValidateSchema(sch)
+	assert.Nil(t, err)
+
+	brokenObj := NewFromMap(map[string]interface{}{
+		"fp": "zzzz",
+	})
+
+	err = brokenObj.ValidateSchema(sch)
+	assert.NotNil(t, err)
+}
