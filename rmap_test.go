@@ -127,8 +127,8 @@ func TestVerboseErrors(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = rm.ValidateSchemaBytes(schema)
-	expectedErr := "InvalidValue: map[], PropertyPath: /, RulePath: , Message: \"firstName\" value is required" + "\n" +
-		"InvalidValue: map[], PropertyPath: /, RulePath: , Message: \"lastName\" value is required"
+	expectedErr := `InvalidValue: map[], PropertyPath: /, Message: "firstName" value is required` + "\n" +
+		`InvalidValue: map[], PropertyPath: /, Message: "lastName" value is required`
 	assert.NotNil(t, err)
 	assert.Equal(t, expectedErr, err.Error())
 
@@ -137,8 +137,9 @@ func TestVerboseErrors(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = rm.ValidateSchemaBytes(schema)
-	expectedErr = `InvalidValue: bar, PropertyPath: /extraData, RulePath: , Message: cannot match schema` + "\n" + `InvalidValue: map[extraData:bar], PropertyPath: /, RulePath: , Message: "firstName" value is required` + "\n" +
-		`InvalidValue: map[extraData:bar], PropertyPath: /, RulePath: , Message: "lastName" value is required`
+	expectedErr = `InvalidValue: map[extraData:bar], PropertyPath: /, Message: "firstName" value is required` + "\n" +
+		`InvalidValue: map[extraData:bar], PropertyPath: /, Message: "lastName" value is required` + "\n" +
+		`InvalidValue: map[extraData:bar], PropertyPath: /, Message: additional properties are not allowed`
 
 	assert.NotNil(t, err)
 	assert.Equal(t, expectedErr, err.Error())
@@ -416,4 +417,37 @@ func TestSetJPtrRecursiveBadSubjObj(t *testing.T) {
 	err := obj.SetJPtrRecursive(jptr, value)
 	assert.NotNil(t, err)
 	assert.Equal(t, "ptr.Set() failed: Invalid token reference 'obj'", err.Error())
+}
+
+func TestReferences(t *testing.T) {
+	sch := NewFromMap(map[string]interface{}{
+		"$defs": map[string]interface{}{
+			"fingerprint": map[string]interface{}{
+				"type": "string",
+				"pattern": "^[0-9a-f]{4}$",
+			},
+		},
+		"type": "object",
+		"properties": map[string]interface{}{
+			"fp": map[string]interface{}{
+				"$ref": "#/$defs/fingerprint",
+			},
+		},
+		"additionalProperties": false,
+		"required": []interface{}{"fp"},
+	})
+
+	obj := NewFromMap(map[string]interface{}{
+		"fp": "1234",
+	})
+
+	err := obj.ValidateSchema(sch)
+	assert.Nil(t, err)
+
+	brokenObj := NewFromMap(map[string]interface{}{
+		"fp": "zzzz",
+	})
+
+	err = brokenObj.ValidateSchema(sch)
+	assert.NotNil(t, err)
 }
