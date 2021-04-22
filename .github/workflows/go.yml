@@ -1,0 +1,41 @@
+name: Go
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      env: 
+        GO111MODULE: on
+        CORE_CHAINCODE_LOGGING_LEVEL: ERROR
+        GOPRIVATE: github.com/KompiTech/*
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.14
+        
+    - name: Set Up for tests
+      run: |
+        mkdir -p ~/.ssh/
+        echo "$GITHUB_PRIVATE_KEY" > ~/.ssh/id_rsa
+        sudo chmod 600 ~/.ssh/id_rsa
+        git config --global url."git@github.com:KompiTech/".insteadOf "https://github.com/KompiTech/"
+        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        make install-cc-tools
+      env:
+        GO111MODULE: on
+        CORE_CHAINCODE_LOGGING_LEVEL: ERROR
+        GOPRIVATE: github.com/KompiTech/*
+        GITHUB_PRIVATE_KEY: ${{secrets.DO_GITHUB_PRIVATE_KEY}}
+        DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+        DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+    - name: Test
+      run: make test
+      env: 
+        GO111MODULE: on
+        CORE_CHAINCODE_LOGGING_LEVEL: ERROR
+        GOPRIVATE: github.com/KompiTech/*
