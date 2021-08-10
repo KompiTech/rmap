@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,6 +28,7 @@ type Rmap struct {
 }
 
 const (
+	errInvalidConvert = "key: %s cannot be converted to: %s"
 	errInvalidKeyType  = "key: %s is not of type: %s in object: %s, but: %T"
 	errInvalidArrayKeyType = "key: %s, array index: %d is not of type: %s in object: %s, but: %T"
 	errInvalidJPtrType = "JSONPointer: %s is not of type: %s in object: %s, but: %T"
@@ -787,6 +789,29 @@ func (r Rmap) MustGetFloat64(key string) float64 {
 	if err != nil {
 		panic(err)
 	}
+	return val
+}
+
+func (r Rmap) ConvertToInt(key string) (int, error) {
+	valS, err := r.GetString(key)
+	if err != nil {
+		return -1, err
+	}
+
+	val, err := strconv.Atoi(valS)
+	if err != nil {
+		return -1, fmt.Errorf(errInvalidConvert, "key", "int")
+	}
+
+	return val, nil
+}
+
+func (r Rmap) MustConvertToInt(key string) int {
+	val, err := r.ConvertToInt(key)
+	if err != nil {
+		panic(err)
+	}
+
 	return val
 }
 
