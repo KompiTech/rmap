@@ -28,7 +28,7 @@ type Rmap struct {
 }
 
 const (
-	errInvalidConvert = "key: %s cannot be converted to: %s"
+	errInvalidConvert = "key: %s (value: %s) cannot be converted to: %s"
 	errInvalidKeyType  = "key: %s is not of type: %s in object: %s, but: %T"
 	errInvalidArrayKeyType = "key: %s, array index: %d is not of type: %s in object: %s, but: %T"
 	errInvalidJPtrType = "JSONPointer: %s is not of type: %s in object: %s, but: %T"
@@ -800,7 +800,7 @@ func (r Rmap) ConvertToInt(key string) (int, error) {
 
 	val, err := strconv.Atoi(valS)
 	if err != nil {
-		return -1, fmt.Errorf(errInvalidConvert, "key", "int")
+		return -1, fmt.Errorf(errInvalidConvert, key, valS, "int")
 	}
 
 	return val, nil
