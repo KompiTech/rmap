@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,6 +28,7 @@ type Rmap struct {
 }
 
 const (
+	errInvalidConvert = "key: %s (value: %s) cannot be converted to: %s"
 	errInvalidKeyType  = "key: %s is not of type: %s in object: %s, but: %T"
 	errInvalidArrayKeyType = "key: %s, array index: %d is not of type: %s in object: %s, but: %T"
 	errInvalidJPtrType = "JSONPointer: %s is not of type: %s in object: %s, but: %T"
@@ -185,6 +187,9 @@ func NewFromSlice(input []interface{}) (Rmap, error) {
 }
 
 func (r Rmap) IsEmpty() bool {
+	if r.Mapa == nil {
+		return true
+	}
 	return len(r.Mapa) == 0
 }
 
@@ -312,7 +317,7 @@ func (r Rmap) SetJPtr(path string, value interface{}) error {
 	return nil
 }
 
-// Set JPtrRecursive works like SetJPtr, but will create any missing parts of path
+// SetJPtrRecursive works like SetJPtr, but will create any missing parts of path
 func (r Rmap) SetJPtrRecursive(jptr string, value interface{}) error {
 	pathFields := strings.Split(jptr[1:], "/") // split jptr into all sub objects
 
@@ -790,6 +795,29 @@ func (r Rmap) MustGetFloat64(key string) float64 {
 	return val
 }
 
+func (r Rmap) ConvertToInt(key string) (int, error) {
+	valS, err := r.GetString(key)
+	if err != nil {
+		return -1, err
+	}
+
+	val, err := strconv.Atoi(valS)
+	if err != nil {
+		return -1, fmt.Errorf(errInvalidConvert, key, valS, "int")
+	}
+
+	return val, nil
+}
+
+func (r Rmap) MustConvertToInt(key string) int {
+	val, err := r.ConvertToInt(key)
+	if err != nil {
+		panic(err)
+	}
+
+	return val
+}
+
 func (r Rmap) GetInt(key string) (int, error) {
 	valI, err := r.get(key)
 	if err != nil {
@@ -1089,4 +1117,18 @@ func (r Rmap) IsValidJSONSchema() bool {
 
 	// every valid schema must have type keyword
 	return rSchema.HasKeyword("type")
+}
+
+func (r Rmap) ToStringMap() (map[string]string, error) {
+	output := map[string]string{}
+
+	var err error
+	for k,_ := range r.Mapa {
+		output[k], err = r.GetString(k)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return output, nil
 }
