@@ -451,3 +451,24 @@ func TestReferences(t *testing.T) {
 	err = brokenObj.ValidateSchema(sch)
 	assert.NotNil(t, err)
 }
+
+func TestConvertInt(t *testing.T) {
+	m := NewFromMap(map[string]interface{}{
+		"key": "42",
+	})
+
+	val, err := m.ConvertToInt("key")
+	assert.Nil(t, err)
+	assert.Equal(t, 42, val)
+}
+
+func TestConvertToIntFail(t *testing.T) {
+	m := NewFromMap(map[string]interface{}{
+		"key": "a",
+	})
+
+	val, err := m.ConvertToInt("key")
+	assert.NotNil(t, err)
+	assert.Equal(t, -1, val)
+	assert.Equal(t, "key: key (value: a) cannot be converted to: int", err.Error())
+}
