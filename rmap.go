@@ -1,6 +1,7 @@
 package rmap
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -1131,4 +1132,13 @@ func (r Rmap) ToStringMap() (map[string]string, error) {
 	}
 
 	return output, nil
+}
+
+func (r Rmap) ToReader() *bytes.Reader {
+	return bytes.NewReader(r.Bytes())
+}
+
+// Wrap returns copy of this wrapped in specified key
+func (r Rmap) Wrap(key string) Rmap {
+	return NewFromMap(map[string]interface{}{key: r.Copy().Mapa})
 }
