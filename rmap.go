@@ -29,10 +29,10 @@ type Rmap struct {
 }
 
 const (
-	errInvalidConvert = "key: %s (value: %s) cannot be converted to: %s"
-	errInvalidKeyType  = "key: %s is not of type: %s in object: %s, but: %T"
-	errInvalidArrayKeyType = "key: %s, array index: %d is not of type: %s in object: %s, but: %T"
-	errInvalidJPtrType = "JSONPointer: %s is not of type: %s in object: %s, but: %T"
+	errInvalidConvert         = "key: %s (value: %s) cannot be converted to: %s"
+	errInvalidKeyType         = "key: %s is not of type: %s in object: %s, but: %T"
+	errInvalidArrayKeyType    = "key: %s, array index: %d is not of type: %s in object: %s, but: %T"
+	errInvalidJPtrType        = "JSONPointer: %s is not of type: %s in object: %s, but: %T"
 	errInvalidArrayMemberType = "key: %s containing array has invalid element type on index: %d, expected: %s, got: %T"
 )
 
@@ -322,7 +322,7 @@ func (r Rmap) SetJPtr(path string, value interface{}) error {
 func (r Rmap) SetJPtrRecursive(jptr string, value interface{}) error {
 	pathFields := strings.Split(jptr[1:], "/") // split jptr into all sub objects
 
-	for pathIndex, _  := range pathFields[:len(pathFields)-1] { // iterate until last elem (that will be set to supplied value, everything inbetween will be set to map if it doesnt exists)
+	for pathIndex, _ := range pathFields[:len(pathFields)-1] { // iterate until last elem (that will be set to supplied value, everything inbetween will be set to map if it doesnt exists)
 		subPathJPtr := "/" + strings.Join(pathFields[0:pathIndex+1], "/")
 
 		ptr, err := jsonptr.NewJsonPointer(subPathJPtr)
@@ -747,7 +747,7 @@ func jsonify(m map[interface{}]interface{}) map[string]interface{} {
 	return res
 }
 
-func (r Rmap) get(key string) (interface{}, error) {
+func (r Rmap) Get(key string) (interface{}, error) {
 	if val, exists := r.Mapa[key]; exists {
 		return val, nil
 	}
@@ -755,9 +755,9 @@ func (r Rmap) get(key string) (interface{}, error) {
 }
 
 func (r Rmap) GetBool(key string) (bool, error) {
-	valI, err := r.get(key)
+	valI, err := r.Get(key)
 	if err != nil {
-		return false, errors.Wrap(err, "r.get() failed")
+		return false, errors.Wrap(err, "r.Get() failed")
 	}
 
 	valB, ok := valI.(bool)
@@ -776,9 +776,9 @@ func (r Rmap) MustGetBool(key string) bool {
 }
 
 func (r Rmap) GetFloat64(key string) (float64, error) {
-	valI, err := r.get(key)
+	valI, err := r.Get(key)
 	if err != nil {
-		return -1.0, errors.Wrap(err, "r.get() failed")
+		return -1.0, errors.Wrap(err, "r.Get() failed")
 	}
 
 	valF, ok := valI.(float64)
@@ -820,9 +820,9 @@ func (r Rmap) MustConvertToInt(key string) int {
 }
 
 func (r Rmap) GetInt(key string) (int, error) {
-	valI, err := r.get(key)
+	valI, err := r.Get(key)
 	if err != nil {
-		return -1, errors.Wrap(err, "r.get() failed")
+		return -1, errors.Wrap(err, "r.Get() failed")
 	}
 
 	switch valI.(type) {
@@ -844,9 +844,9 @@ func (r Rmap) MustGetInt(key string) int {
 }
 
 func (r Rmap) GetIterable(key string) ([]interface{}, error) {
-	valI, err := r.get(key)
+	valI, err := r.Get(key)
 	if err != nil {
-		return nil, errors.Wrap(err, "r.get() failed")
+		return nil, errors.Wrap(err, "r.Get() failed")
 	}
 
 	return r.interfaceToIterable(valI, key)
@@ -998,9 +998,9 @@ func (r Rmap) MustGetIterable(key string) []interface{} {
 }
 
 func (r Rmap) GetRmap(key string) (Rmap, error) {
-	valI, err := r.get(key)
+	valI, err := r.Get(key)
 	if err != nil {
-		return Rmap{}, errors.Wrap(err, "r.get() failed")
+		return Rmap{}, errors.Wrap(err, "r.Get() failed")
 	}
 
 	switch valI.(type) {
@@ -1022,9 +1022,9 @@ func (r Rmap) MustGetRmap(key string) Rmap {
 }
 
 func (r Rmap) GetString(key string) (string, error) {
-	valI, err := r.get(key)
+	valI, err := r.Get(key)
 	if err != nil {
-		return "", errors.Wrap(err, "r.get() failed")
+		return "", errors.Wrap(err, "r.Get() failed")
 	}
 
 	valS, ok := valI.(string)
@@ -1124,7 +1124,7 @@ func (r Rmap) ToStringMap() (map[string]string, error) {
 	output := map[string]string{}
 
 	var err error
-	for k,_ := range r.Mapa {
+	for k, _ := range r.Mapa {
 		output[k], err = r.GetString(k)
 		if err != nil {
 			return nil, err

@@ -11,9 +11,9 @@ import (
 //nested keys are stored as l1.l2.l3
 func RmapsToCSV(rmaps []Rmap, separator string) ([]byte, error) {
 	header := map[string]interface{}{}
-	//get header from first element
+	//Get header from first element
 	collectKeys(rmaps[0], nil, &header)
-	//get sorted header keys
+	//Get sorted header keys
 	headerKeys := NewFromMap(header).KeysSliceString()
 	sort.Strings(headerKeys)
 	output := bytes.Buffer{}
@@ -52,7 +52,7 @@ func writeValues(input Rmap, headerKeys []string, separator string) ([]byte, err
 	rowData := make([]string, len(headerKeys))
 
 	for idx, key := range headerKeys {
-		val, err := input.get(key)
+		val, err := input.Get(key)
 		if err != nil {
 			return nil, err
 		}
