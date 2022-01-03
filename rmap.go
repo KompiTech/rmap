@@ -854,25 +854,33 @@ func (r Rmap) GetIterable(key string) ([]interface{}, error) {
 
 func (r Rmap) interfaceToIterable(valI interface{}, key string) ([]interface{}, error) {
 	var valIter []interface{}
-	var ok bool
 
-	valIter, ok = valI.([]interface{})
-	if !ok {
-		tmpI, ok := valI.([]map[string]interface{})
-		if !ok {
-			tmpI2, ok := valI.([]Rmap)
-			if !ok {
-				return nil, fmt.Errorf(errInvalidKeyType, key, "ARRAY", r.String(), valI)
-			} else {
-				for _, xI := range tmpI2 {
-					valIter = append(valIter, xI)
-				}
-			}
-		} else {
-			for _, xI := range tmpI {
-				valIter = append(valIter, xI)
-			}
+	switch v := valI.(type) {
+	case []interface{}:
+		return v, nil
+	// cannot use comma-separated case types here
+	case []Rmap:
+		for _, xI := range v {
+			valIter = append(valIter, xI)
 		}
+	case []map[string]interface{}:
+		for _, xI := range v {
+			valIter = append(valIter, xI)
+		}
+	case []map[string]string:
+		for _, xI := range v {
+			valIter = append(valIter, xI)
+		}
+	case []map[string]int:
+		for _, xI := range v {
+			valIter = append(valIter, xI)
+		}
+	case []map[string]float64:
+		for _, xI := range v {
+			valIter = append(valIter, xI)
+		}
+	default:
+		return nil, fmt.Errorf(errInvalidKeyType, key, "ARRAY", r.String(), valI)
 	}
 
 	return valIter, nil
