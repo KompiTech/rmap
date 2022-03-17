@@ -1042,6 +1042,14 @@ func (r Rmap) GetString(key string) (string, error) {
 	return valS, nil
 }
 
+func (r Rmap) GetStringWithDefault(key, def string) (string, error) {
+	if r.Exists(key) {
+		return r.GetString(key)
+	} else {
+		return def, nil
+	}
+}
+
 func (r Rmap) MustGetString(key string) string {
 	val, err := r.GetString(key)
 	if err != nil {
