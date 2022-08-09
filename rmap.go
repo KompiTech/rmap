@@ -828,6 +828,8 @@ func (r Rmap) GetInt(key string) (int, error) {
 	switch valI.(type) {
 	case float64:
 		return int(valI.(float64)), nil
+	case int64:
+		return int(valI.(int64)), nil
 	case int:
 		return valI.(int), nil
 	default:
