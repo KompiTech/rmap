@@ -423,7 +423,7 @@ func TestReferences(t *testing.T) {
 	sch := NewFromMap(map[string]interface{}{
 		"$defs": map[string]interface{}{
 			"fingerprint": map[string]interface{}{
-				"type": "string",
+				"type":    "string",
 				"pattern": "^[0-9a-f]{4}$",
 			},
 		},
@@ -434,7 +434,7 @@ func TestReferences(t *testing.T) {
 			},
 		},
 		"additionalProperties": false,
-		"required": []interface{}{"fp"},
+		"required":             []interface{}{"fp"},
 	})
 
 	obj := NewFromMap(map[string]interface{}{
@@ -471,4 +471,27 @@ func TestConvertToIntFail(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, -1, val)
 	assert.Equal(t, "key: key (value: a) cannot be converted to: int", err.Error())
+}
+
+func TestIterables(t *testing.T) {
+	m := NewFromMap(map[string]interface{}{
+		"key": []map[string]interface{}{
+			{"memer": "kekel"},
+			{"kekel": "memer", "foo": "bar"},
+		},
+	})
+
+	b, err := m.IterableBytes("key")
+	assert.Nil(t, err)
+
+	rs, err := NewFromIterableBytes(b)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 2, len(rs))
+	assert.Equal(t, 1, len(rs[0].Mapa))
+	assert.Equal(t, 2, len(rs[1].Mapa))
+
+	assert.Equal(t, "kekel", rs[0].MustGetString("memer"))
+	assert.Equal(t, "memer", rs[1].MustGetString("kekel"))
+	assert.Equal(t, "bar", rs[1].MustGetString("foo"))
 }

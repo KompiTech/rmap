@@ -1160,3 +1160,46 @@ func (r Rmap) ToReader() *bytes.Reader {
 func (r Rmap) Wrap(key string) Rmap {
 	return NewFromMap(map[string]interface{}{key: r.Copy().Mapa})
 }
+
+func (r Rmap) _marshal(i interface{}) ([]byte, error) {
+	return json.Marshal(i)
+}
+
+func (r Rmap) IterableBytes(key string) ([]byte, error) {
+	iter, err := r.GetIterable(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return r._marshal(iter)
+}
+
+func (r Rmap) IterableBytesJptr(jptr string) ([]byte, error) {
+	iter, err := r.GetIterableJPtr(jptr)
+	if err != nil {
+		return nil, err
+	}
+
+	return r._marshal(iter)
+}
+
+func NewFromIterableBytes(b []byte) ([]Rmap, error) {
+	iter := []interface{}{}
+
+	if err := json.Unmarshal(b, &iter); err != nil {
+		return nil, err
+	}
+
+	res := make([]Rmap, 0, len(iter))
+
+	for _, ii := range iter {
+		rm, err := NewFromInterface(ii)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, rm)
+	}
+
+	return res, nil
+}
