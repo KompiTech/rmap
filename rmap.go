@@ -658,28 +658,23 @@ func (r Rmap) Inject(path string, value Rmap) error {
 	return nil
 }
 
-func (r *Rmap) ApplyMergePatchBytes(patch []byte) error {
+func (r Rmap) ApplyMergePatchBytes(patch []byte) (Rmap, error) {
 	patchedBytes, err := jsonpatch.MergePatch(r.Bytes(), patch)
 	if err != nil {
-		return errors.Wrapf(err, "jsonpatch.MergePatch() failed")
+		return Rmap{}, errors.Wrapf(err, "jsonpatch.MergePatch() failed")
 	}
 
 	// r.Mapa must be replaced in-place
 	patched, err := NewFromBytes(patchedBytes)
 	if err != nil {
-		return errors.Wrapf(err, "rmap.NewFromBytes() failed")
+		return Rmap{}, errors.Wrapf(err, "rmap.NewFromBytes() failed")
 	}
 
-	r.Mapa = patched.Mapa
-	return nil
+	return patched, nil
 }
 
-func (r *Rmap) ApplyMergePatch(patch Rmap) error {
-	if err := r.ApplyMergePatchBytes(patch.Bytes()); err != nil {
-		return errors.Wrapf(err, "r.ApplyMergePatchBytes() failed")
-	}
-
-	return nil
+func (r Rmap) ApplyMergePatch(patch Rmap) (Rmap, error) {
+	return r.ApplyMergePatchBytes(patch.Bytes())
 }
 
 func (r Rmap) CreateMergePatch(changed Rmap) ([]byte, error) {
