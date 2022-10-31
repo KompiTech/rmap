@@ -1,0 +1,3 @@
+Date (DD.MM.YYYY),Time from (24H time HH:MM),Time to (24H time HH:MM),Visit summary (optional leave empty if not needed)
+10.10.2022,08:30,17:00,"some stuff, with commas"
+11.11.2033,08:30,17:00,asasasasas

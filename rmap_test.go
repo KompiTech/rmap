@@ -2,6 +2,7 @@ package rmap
 
 import (
 	"bytes"
+	"log"
 	"testing"
 	"time"
 
@@ -494,4 +495,21 @@ func TestIterables(t *testing.T) {
 	assert.Equal(t, "kekel", rs[0].MustGetString("memer"))
 	assert.Equal(t, "memer", rs[1].MustGetString("kekel"))
 	assert.Equal(t, "bar", rs[1].MustGetString("foo"))
+}
+
+func TestCSV(t *testing.T) {
+	rs, err := NewSliceFromCsv("timelogTemplate.csv")
+	assert.Nil(t, err)
+
+	log.Print(rs)
+
+	assert.Equal(t, "10.10.2022", rs[0].Mapa["Date (DD.MM.YYYY)"])
+	assert.Equal(t, "08:30", rs[0].Mapa["Time from (24H time HH:MM)"])
+	assert.Equal(t, "17:00", rs[0].Mapa["Time to (24H time HH:MM)"])
+	assert.Equal(t, "some stuff, with commas", rs[0].Mapa["Visit summary (optional leave empty if not needed)"])
+
+	assert.Equal(t, "11.11.2033", rs[1].Mapa["Date (DD.MM.YYYY)"])
+	assert.Equal(t, "08:30", rs[1].Mapa["Time from (24H time HH:MM)"])
+	assert.Equal(t, "17:00", rs[1].Mapa["Time to (24H time HH:MM)"])
+	assert.Equal(t, "asasasasas", rs[1].Mapa["Visit summary (optional leave empty if not needed)"])
 }

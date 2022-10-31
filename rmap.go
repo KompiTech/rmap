@@ -3,9 +3,11 @@ package rmap
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -45,6 +47,43 @@ func ConvertSliceToMaps(slice []Rmap) []interface{} {
 	}
 
 	return outputSlice
+}
+
+func NewSliceFromCsv(csvF string) ([]Rmap, error) {
+	frdr, err := os.Open(csvF)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() { _ = frdr.Close() }()
+
+	r := csv.NewReader(frdr)
+
+	hdr, err := r.Read()
+	if err != nil {
+		return nil, err
+	}
+
+	out := []Rmap{}
+
+	for {
+		nextLine, err := r.Read()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+
+		nextRm := NewEmpty()
+		for i, hdrC := range hdr {
+			nextRm.Mapa[hdrC] = nextLine[i]
+		}
+
+		out = append(out, nextRm)
+	}
+
+	return out, nil
 }
 
 func NewFromBytes(bytes []byte) (Rmap, error) {
