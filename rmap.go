@@ -75,12 +75,23 @@ func NewSliceFromCsv(csvF string) ([]Rmap, error) {
 			return nil, err
 		}
 
-		nextRm := NewEmpty()
-		for i, hdrC := range hdr {
-			nextRm.Mapa[hdrC] = nextLine[i]
+		isEmpty := true
+		for _, v := range nextLine {
+			if v != "" {
+				isEmpty = false
+				break
+			}
 		}
 
-		out = append(out, nextRm)
+		// only append non empty lines (contains at least one string value)
+		if !isEmpty {
+			nextRm := NewEmpty()
+			for i, hdrC := range hdr {
+				nextRm.Mapa[hdrC] = nextLine[i]
+			}
+
+			out = append(out, nextRm)
+		}
 	}
 
 	return out, nil
